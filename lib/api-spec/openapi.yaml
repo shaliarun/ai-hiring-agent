@@ -3,20 +3,30 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AI Hiring Agent API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: jobs
+    description: Job postings and criteria
+  - name: candidates
+    description: Candidate management
+  - name: resumes
+    description: Resume upload and parsing
+  - name: screening
+    description: AI screening operations
+  - name: dashboard
+    description: Dashboard summaries
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +34,322 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [jobs]
+      summary: List all job postings
+      responses:
+        "200":
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Create a new job posting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobBody"
+      responses:
+        "201":
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+
+  /jobs/{id}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      summary: Get a specific job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateJob
+      tags: [jobs]
+      summary: Update a job posting
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateJobBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+    delete:
+      operationId: deleteJob
+      tags: [jobs]
+      summary: Delete a job posting
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /jobs/{id}/candidates:
+    get:
+      operationId: listJobCandidates
+      tags: [jobs]
+      summary: List candidates for a job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: minScore
+          in: query
+          schema:
+            type: number
+        - name: shortlisted
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of candidates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Candidate"
+
+  /jobs/{id}/screen:
+    post:
+      operationId: screenJobCandidates
+      tags: [screening]
+      summary: Run AI screening for a job's uploaded resumes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Screening complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScreeningResult"
+
+  /candidates:
+    get:
+      operationId: listCandidates
+      tags: [candidates]
+      summary: List all candidates
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: jobId
+          in: query
+          schema:
+            type: integer
+        - name: shortlisted
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of candidates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Candidate"
+
+  /candidates/{id}:
+    get:
+      operationId: getCandidate
+      tags: [candidates]
+      summary: Get a candidate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Candidate found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateCandidate
+      tags: [candidates]
+      summary: Update candidate status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCandidateBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+    delete:
+      operationId: deleteCandidate
+      tags: [candidates]
+      summary: Delete a candidate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /candidates/{id}/notes:
+    post:
+      operationId: addCandidateNote
+      tags: [candidates]
+      summary: Add an interview note to a candidate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddNoteBody"
+      responses:
+        "201":
+          description: Note added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+
+  /resumes/upload:
+    post:
+      operationId: uploadResumes
+      tags: [resumes]
+      summary: Upload resumes for a job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadResumesBody"
+      responses:
+        "201":
+          description: Resumes uploaded
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Candidate"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get overall hiring pipeline summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/pipeline:
+    get:
+      operationId: getPipelineStats
+      tags: [dashboard]
+      summary: Get candidate pipeline stage breakdown
+      responses:
+        "200":
+          description: Pipeline stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PipelineStat"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent hiring activity
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +360,338 @@ components:
       required:
         - status
 
+    Job:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        department:
+          type: string
+        requiredSkills:
+          type: array
+          items:
+            type: string
+        niceToHaveSkills:
+          type: array
+          items:
+            type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        experienceMin:
+          type: ["integer", "null"]
+        experienceMax:
+          type: ["integer", "null"]
+        education:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        salaryMin:
+          type: ["integer", "null"]
+        salaryMax:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [open, closed, paused]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        candidateCount:
+          type: integer
+        shortlistedCount:
+          type: integer
+      required:
+        - id
+        - title
+        - department
+        - requiredSkills
+        - niceToHaveSkills
+        - keywords
+        - experienceMin
+        - experienceMax
+        - education
+        - location
+        - salaryMin
+        - salaryMax
+        - status
+        - createdAt
+        - updatedAt
+        - candidateCount
+        - shortlistedCount
+
+    CreateJobBody:
+      type: object
+      properties:
+        title:
+          type: string
+        department:
+          type: string
+        requiredSkills:
+          type: array
+          items:
+            type: string
+        niceToHaveSkills:
+          type: array
+          items:
+            type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        experienceMin:
+          type: ["integer", "null"]
+        experienceMax:
+          type: ["integer", "null"]
+        education:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        salaryMin:
+          type: ["integer", "null"]
+        salaryMax:
+          type: ["integer", "null"]
+      required:
+        - title
+        - department
+        - requiredSkills
+
+    UpdateJobBody:
+      type: object
+      properties:
+        title:
+          type: string
+        department:
+          type: string
+        requiredSkills:
+          type: array
+          items:
+            type: string
+        niceToHaveSkills:
+          type: array
+          items:
+            type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        experienceMin:
+          type: ["integer", "null"]
+        experienceMax:
+          type: ["integer", "null"]
+        education:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        salaryMin:
+          type: ["integer", "null"]
+        salaryMax:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [open, closed, paused]
+
+    Candidate:
+      type: object
+      properties:
+        id:
+          type: integer
+        jobId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        skills:
+          type: array
+          items:
+            type: string
+        experienceYears:
+          type: ["number", "null"]
+        education:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        resumeText:
+          type: ["string", "null"]
+        matchScore:
+          type: ["number", "null"]
+        matchedSkills:
+          type: array
+          items:
+            type: string
+        rejectionReason:
+          type: ["string", "null"]
+        shortlisted:
+          type: boolean
+        status:
+          type: string
+          enum: [pending, round1, round2, final, rejected, hired]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - jobId
+        - name
+        - email
+        - phone
+        - skills
+        - experienceYears
+        - education
+        - location
+        - resumeText
+        - matchScore
+        - matchedSkills
+        - rejectionReason
+        - shortlisted
+        - status
+        - notes
+        - createdAt
+        - updatedAt
+
+    UpdateCandidateBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, round1, round2, final, rejected, hired]
+        shortlisted:
+          type: boolean
+        notes:
+          type: string
+
+    AddNoteBody:
+      type: object
+      properties:
+        notes:
+          type: string
+      required:
+        - notes
+
+    UploadResumesBody:
+      type: object
+      properties:
+        jobId:
+          type: integer
+        resumes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResumeInput"
+      required:
+        - jobId
+        - resumes
+
+    ResumeInput:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        resumeText:
+          type: string
+        fileName:
+          type: string
+      required:
+        - name
+        - email
+        - resumeText
+        - fileName
+
+    ScreeningResult:
+      type: object
+      properties:
+        screened:
+          type: integer
+        shortlisted:
+          type: integer
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Candidate"
+      required:
+        - screened
+        - shortlisted
+        - candidates
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalJobs:
+          type: integer
+        openJobs:
+          type: integer
+        totalCandidates:
+          type: integer
+        shortlisted:
+          type: integer
+        inProgress:
+          type: integer
+        hired:
+          type: integer
+        rejected:
+          type: integer
+        avgMatchScore:
+          type: ["number", "null"]
+      required:
+        - totalJobs
+        - openJobs
+        - totalCandidates
+        - shortlisted
+        - inProgress
+        - hired
+        - rejected
+        - avgMatchScore
+
+    PipelineStat:
+      type: object
+      properties:
+        stage:
+          type: string
+        count:
+          type: integer
+        label:
+          type: string
+      required:
+        - stage
+        - count
+        - label
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        candidateName:
+          type: ["string", "null"]
+        jobTitle:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - description
+        - candidateName
+        - jobTitle
+        - createdAt
