@@ -21,7 +21,7 @@ export async function parseFileBuffer(
   if (mimeType === "application/pdf" || ext === "pdf") {
     const { extractText } = await import("unpdf");
     const result = await extractText(new Uint8Array(buffer));
-    text = result.text;
+    text = Array.isArray(result.text) ? result.text.join("\n") : String(result.text);
   } else if (
     mimeType ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
@@ -60,9 +60,17 @@ export async function parseFileBuffer(
     text = buffer.toString("utf-8");
   }
 
-  const name = extractName(text);
-  const email = extractEmail(text);
-  const phone = extractPhone(text);
+  const normalizedText = text
+    .replace(/([A-Z](?: [A-Z]){2,})\s*([a-z])/g, (_, spaced, next) => {
+      return spaced + " " + next;
+    })
+    .replace(/(\d)([A-Z])/g, "$1 $2")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]{2,})([a-z])/g, (_, upper, lower) => upper.slice(0, -1) + " " + upper.slice(-1) + lower);
+
+  const email = extractEmail(normalizedText);
+  const phone = extractPhone(normalizedText);
+  const name = extractName(normalizedText, originalName);
 
   return { text, name, email, phone, fileName: originalName };
 }
@@ -92,9 +100,30 @@ async function extractPptxText(buffer: Buffer): Promise<string> {
 }
 
 function extractEmail(text: string): string {
-  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-  const match = text.match(emailRegex);
-  return match ? match[0] : "";
+  const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  const matches = [...text.matchAll(emailRegex)];
+  if (!matches.length) return "";
+
+  for (const m of matches) {
+    const candidate = m[1];
+    const idx = m.index ?? 0;
+    const charBefore = idx > 0 ? text[idx - 1] : " ";
+    if (/[\s\n]/.test(charBefore) || idx === 0) return candidate;
+  }
+
+  let raw = matches[0][1];
+  const atIdx = raw.indexOf("@");
+  let localPart = raw.substring(0, atIdx);
+  const domain = raw.substring(atIdx + 1);
+
+  const dotIdx = localPart.indexOf(".");
+  if (dotIdx === -1) {
+    const lowerStart = localPart.search(/[a-z]/);
+    if (lowerStart > 0 && /^[A-Z]+$/.test(localPart.substring(0, lowerStart))) {
+      localPart = localPart.substring(lowerStart);
+    }
+  }
+  return localPart + "@" + domain;
 }
 
 function extractPhone(text: string): string {
@@ -111,7 +140,29 @@ function extractPhone(text: string): string {
   return "";
 }
 
-function extractName(text: string): string {
+function extractName(text: string, fileName: string = ""): string {
+  if (fileName) {
+    const base = fileName.replace(/\.[^.]+$/, "");
+    const titleWords = /^(resume|cv|cover|letter|final|updated|new|old|copy|draft|senior|junior|manager|engineer|developer|designer|lead|director|specialist|analyst|consultant|intern|associate|coordinator|administrator|executive|officer|architect|head|vp|cto|ceo|cfo|ui|ux|uiux|qa|devops|fullstack|frontend|backend|software|data|product|project|hr|it|marketing|sales|finance|operations|research|medical|clinical|legal|creative|principal|staff)$/i;
+    const nameParts = base
+      .replace(/[-_]+/g, " ")
+      .replace(/\d+/g, "")
+      .split(/\s+/)
+      .map((w) => w.trim())
+      .filter((w) => w.length > 1);
+    const nameOnly: string[] = [];
+    for (const part of nameParts) {
+      if (/^[A-Za-z]+$/.test(part) && !titleWords.test(part)) {
+        nameOnly.push(part);
+      } else {
+        break;
+      }
+    }
+    if (nameOnly.length >= 2) {
+      return toTitleCase(nameOnly.slice(0, 3).join(" "));
+    }
+  }
+
   const lines = text
     .split(/\n/)
     .map((l) => l.trim())
@@ -119,23 +170,51 @@ function extractName(text: string): string {
 
   const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
   const phoneRegex = /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
+  const urlRegex = /https?:\/\//;
   const skipWords = [
     "resume", "curriculum", "vitae", "cv", "objective", "summary",
     "experience", "education", "skills", "address", "contact",
-    "profile", "about", "portfolio",
+    "profile", "about", "portfolio", "c o n t a c t", "a b o u t",
+    "senior", "junior", "manager", "engineer", "developer", "designer",
+    "lead", "director", "specialist",
   ];
 
-  for (const line of lines.slice(0, 10)) {
+  const consecutiveName: string[] = [];
+  for (const line of lines.slice(0, 15)) {
     if (emailRegex.test(line)) continue;
     if (phoneRegex.test(line)) continue;
+    if (urlRegex.test(line)) continue;
     if (skipWords.some((w) => line.toLowerCase().startsWith(w))) continue;
+    if (/[.!?;:]/.test(line)) continue;
 
-    const cleaned = line.replace(/[^a-zA-Z\s.',-]/g, "").trim();
+    const cleaned = line.replace(/[^a-zA-Z\s',-]/g, "").trim();
+    if (!cleaned) continue;
+
     const words = cleaned.split(/\s+/).filter((w) => w.length > 1);
-    if (words.length >= 2 && words.length <= 5 && cleaned.length <= 60) {
-      return cleaned;
+    if (words.length >= 2 && words.length <= 4 && cleaned.length <= 40) {
+      const looksLikeName = words.every((w) => /^[A-Z][a-z]+$/.test(w) || /^[A-Z]+$/.test(w));
+      if (looksLikeName) {
+        return toTitleCase(cleaned);
+      }
+    }
+
+    if (words.length === 1 && /^[A-Za-z]+$/.test(words[0]) && words[0].length >= 2) {
+      consecutiveName.push(words[0]);
+      if (consecutiveName.length >= 2) {
+        return toTitleCase(consecutiveName.join(" "));
+      }
+    } else {
+      consecutiveName.length = 0;
     }
   }
 
   return "";
+}
+
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
