@@ -55,7 +55,7 @@ export default function Dashboard() {
         />
         <StatCard 
           title="Avg Match Score" 
-          value={summary?.avgMatchScore ? `${summary.avgMatchScore}%` : "N/A"} 
+          value={summary?.avgMatchScore != null ? `${Number(summary.avgMatchScore).toFixed(2)}%` : "N/A"} 
           icon={Activity} 
           loading={loadingSummary} 
         />
