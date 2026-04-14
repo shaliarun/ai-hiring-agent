@@ -44,6 +44,7 @@ router.post("/jobs", async (req, res): Promise<void> => {
   const [job] = await db.insert(jobsTable).values({
     title: parsed.data.title,
     department: parsed.data.department,
+    description: parsed.data.description ?? null,
     requiredSkills: parsed.data.requiredSkills ?? [],
     niceToHaveSkills: parsed.data.niceToHaveSkills ?? [],
     keywords: parsed.data.keywords ?? [],
