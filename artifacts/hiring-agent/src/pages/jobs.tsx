@@ -38,6 +38,20 @@ export default function JobsList() {
     });
   };
 
+  const handleReopenPosition = (e: React.MouseEvent, jobId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    updateJob.mutate({ id: jobId, data: { status: "open" } }, {
+      onSuccess: () => {
+        toast({ title: "Position Reopened" });
+        queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
+      },
+      onError: () => {
+        toast({ title: "Failed to reopen position", variant: "destructive" });
+      }
+    });
+  };
+
   const handleDelete = (e: React.MouseEvent, jobId: number) => {
     e.preventDefault();
     e.stopPropagation();
@@ -154,7 +168,12 @@ export default function JobsList() {
                   </div>
                 </Link>
                 <div className="flex items-center justify-end gap-2 px-6 py-3 border-t mt-4">
-                  {job.status !== "closed" && (
+                  {job.status === "closed" ? (
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => handleReopenPosition(e, job.id)}>
+                      <XCircle className="h-3.5 w-3.5" />
+                      Reopen Position
+                    </Button>
+                  ) : (
                     <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => handleClosePosition(e, job.id)}>
                       <XCircle className="h-3.5 w-3.5" />
                       Close Position
