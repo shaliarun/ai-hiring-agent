@@ -307,59 +307,52 @@ export default function HRPortal() {
                     </div>
                   </div>
 
-                  <div className="mt-3 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs">Extracted Resume Content</Label>
-                      <label className="cursor-pointer">
-                        <input
-                          type="file"
-                          accept={ACCEPTED_EXTENSIONS}
-                          className="hidden"
-                          onChange={async (e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              const file = e.target.files[0];
-                              updateResume(index, "parsing" as any, true as any);
-                              const formData = new FormData();
-                              formData.append("files", file);
-                              try {
-                                const baseUrl = import.meta.env.BASE_URL || "/";
-                                const resp = await fetch(`${baseUrl}api/resumes/parse`, {
-                                  method: "POST",
-                                  body: formData,
+                  <div className="mt-3 flex justify-end">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept={ACCEPTED_EXTENSIONS}
+                        className="hidden"
+                        onChange={async (e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const file = e.target.files[0];
+                            updateResume(index, "parsing" as any, true as any);
+                            const formData = new FormData();
+                            formData.append("files", file);
+                            try {
+                              const baseUrl = import.meta.env.BASE_URL || "/";
+                              const resp = await fetch(`${baseUrl}api/resumes/parse`, {
+                                method: "POST",
+                                body: formData,
+                              });
+                              if (resp.ok) {
+                                const [result] = await resp.json();
+                                setResumes(prev => {
+                                  const updated = [...prev];
+                                  updated[index] = {
+                                    name: result.name || updated[index].name,
+                                    email: result.email || updated[index].email,
+                                    phone: result.phone || updated[index].phone,
+                                    resumeText: result.text || "",
+                                    fileName: result.fileName,
+                                    parsing: false,
+                                    parsed: true,
+                                  };
+                                  return updated;
                                 });
-                                if (resp.ok) {
-                                  const [result] = await resp.json();
-                                  setResumes(prev => {
-                                    const updated = [...prev];
-                                    updated[index] = {
-                                      name: result.name || updated[index].name,
-                                      email: result.email || updated[index].email,
-                                      phone: result.phone || updated[index].phone,
-                                      resumeText: result.text || "",
-                                      fileName: result.fileName,
-                                      parsing: false,
-                                      parsed: true,
-                                    };
-                                    return updated;
-                                  });
-                                }
-                              } catch {
-                                updateResume(index, "parsing" as any, false as any);
                               }
-                              e.target.value = "";
+                            } catch {
+                              updateResume(index, "parsing" as any, false as any);
                             }
-                          }}
-                        />
-                        <span className="text-xs text-primary hover:underline flex items-center gap-1">
-                          <FileUp className="h-3 w-3" />
-                          Re-upload file
-                        </span>
-                      </label>
-                    </div>
-                    <div className="bg-muted/50 rounded-md p-3 text-xs font-mono max-h-[120px] overflow-y-auto whitespace-pre-wrap">
-                      {resume.resumeText ? resume.resumeText.substring(0, 2000) : <span className="text-muted-foreground italic">No content extracted yet</span>}
-                      {resume.resumeText && resume.resumeText.length > 2000 && <span className="text-muted-foreground"> ... (truncated)</span>}
-                    </div>
+                            e.target.value = "";
+                          }
+                        }}
+                      />
+                      <span className="text-xs text-primary hover:underline flex items-center gap-1">
+                        <FileUp className="h-3 w-3" />
+                        Re-upload file
+                      </span>
+                    </label>
                   </div>
                 </CardContent>
               </Card>
