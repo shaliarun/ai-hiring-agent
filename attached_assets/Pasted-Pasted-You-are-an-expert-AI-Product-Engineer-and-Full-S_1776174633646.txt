@@ -1,0 +1,169 @@
+Pasted-You-are-an-expert-AI-Product-Engineer-and-Full-Stack-Ar_1775891316180.txt
+You are an expert AI Product Engineer and Full-Stack Architect.
+
+Your task is to design and build a complete AI-powered Employee Hiring Agent system with a clean UI, scalable backend, and intelligent resume screening capabilities.
+
+-----------------------------------
+🎯 OBJECTIVE
+-----------------------------------
+Create an end-to-end hiring workflow system where:
+1. Department Manager submits hiring criteria
+2. HR uploads resumes
+3. AI filters and shortlists candidates based on criteria
+4. Shortlisted candidates are shared with Hiring Manager
+5. Hiring Manager manages candidate progress (rounds)
+
+-----------------------------------
+🧩 CORE FEATURES
+-----------------------------------
+
+1. 📋 CRITERIA SUBMISSION (Manager Side)
+- Build a form for Department Managers with fields:
+  - Job Title
+  - Department
+  - Required Skills (multi-select / tags)
+  - Experience Range (e.g., 3–5 years)
+  - Education (optional)
+  - Keywords / Must-have skills
+  - Nice-to-have skills
+  - Location preference
+  - Salary range (optional)
+- Submit form to AI system
+- Store criteria in database
+
+-----------------------------------
+
+2. 📁 RESUME UPLOAD (HR Side)
+- HR should be able to:
+  - Upload multiple resumes (PDF, DOCX)
+  - Bulk upload supported
+  - Attach resumes to a specific job/criteria
+- Extract structured data from resumes:
+  - Name
+  - Email
+  - Phone number
+  - Skills
+  - Experience
+  - Education
+- Use AI/NLP parsing
+
+-----------------------------------
+
+3. 🤖 AI SCREENING ENGINE
+- Compare resumes with submitted criteria
+- Apply:
+  - Skill matching (semantic matching, not keyword only)
+  - Experience filtering
+  - Location filtering
+- Assign each candidate:
+  - Match Score (0–100)
+  - Reason for selection/rejection
+- Shortlist top candidates automatically
+
+-----------------------------------
+
+4. 📊 SHORTLISTING OUTPUT
+- Display shortlisted candidates in dashboard:
+  - Name
+  - Email
+  - Phone
+  - Match Score
+  - Skills matched
+- Provide filters & sorting
+
+-----------------------------------
+
+5. 📧 EMAIL INTEGRATION
+- Automatically send shortlisted candidates to Hiring Manager via email
+- Include:
+  - Candidate summary
+  - Resume attachment
+  - Match score
+- Use email service (SMTP / SendGrid / Gmail API)
+
+-----------------------------------
+
+6. 📥 HIRING MANAGER DASHBOARD
+- Hiring Manager can:
+  - View shortlisted candidates
+  - Download candidate data (CSV/Excel) including:
+    - Name
+    - Email
+    - Phone number
+    - Match score
+- Add candidate status:
+  - "Initiate 1st Round"
+  - "2nd Round"
+  - "Final Round"
+  - "Rejected"
+- Status updates should be saved in system
+
+-----------------------------------
+
+7. 📦 EXPORT FEATURE
+- Enable download of candidate list as:
+  - CSV
+  - Excel
+- Include all relevant fields
+
+-----------------------------------
+
+8. 🎨 UI/UX REQUIREMENTS
+- Clean, modern dashboard UI
+- Role-based access:
+  - HR
+  - Manager
+  - Hiring Manager
+- Responsive design (desktop + mobile)
+- Use cards, tables, and filters
+
+-----------------------------------
+
+9. 🏗️ TECH STACK (Recommended)
+- Frontend: React / Next.js
+- Backend: Node.js / Python (FastAPI)
+- Database: PostgreSQL / MongoDB
+- AI Layer:
+  - Resume parsing (LLM + embeddings)
+  - Semantic matching
+- File storage: AWS S3 / Firebase
+- Authentication: JWT / OAuth
+
+-----------------------------------
+
+10. 🧠 AI LOGIC DETAILS
+- Use embeddings for semantic skill matching
+- Example:
+  "React" should match "Frontend Development"
+- Weightage:
+  - Skills: 50%
+  - Experience: 30%
+  - Education: 10%
+  - Keywords: 10%
+
+-----------------------------------
+
+11. 🔐 ADDITIONAL FEATURES (Optional but recommended)
+- Duplicate resume detection
+- Candidate ranking visualization
+- Interview feedback notes
+- Audit logs
+
+-----------------------------------
+
+🎯 OUTPUT EXPECTATION
+-----------------------------------
+- Full working system (frontend + backend)
+- API architecture
+- Database schema
+- AI matching logic
+- Sample UI screens
+- Clean and modular code
+
+-----------------------------------
+
+IMPORTANT:
+- Focus on real-world usability
+- Ensure scalability and performance
+- Keep UX simple and intuitive
+- Avoid overly complex flows
