@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { ScoreProgress } from "@/components/score-progress";
-import { Brain, ArrowLeft, Loader2, Search, Filter, XCircle, Trash2 } from "lucide-react";
+import { Brain, ArrowLeft, Loader2, Search, Filter, XCircle, Trash2, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -127,7 +127,7 @@ export default function JobDetail() {
                   disabled={updateJob.isPending}
                   className="gap-2"
                 >
-                  {updateJob.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                  {updateJob.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
                   Reopen Position
                 </Button>
               ) : (

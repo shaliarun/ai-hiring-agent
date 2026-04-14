@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/status-badge";
-import { Plus, Search, MapPin, Building, Users, XCircle, Trash2 } from "lucide-react";
+import { Plus, Search, MapPin, Building, Users, XCircle, Trash2, RefreshCcw } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -170,7 +170,7 @@ export default function JobsList() {
                 <div className="flex items-center justify-end gap-2 px-6 py-3 border-t mt-4">
                   {job.status === "closed" ? (
                     <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => handleReopenPosition(e, job.id)}>
-                      <XCircle className="h-3.5 w-3.5" />
+                      <RefreshCcw className="h-3.5 w-3.5" />
                       Reopen Position
                     </Button>
                   ) : (
