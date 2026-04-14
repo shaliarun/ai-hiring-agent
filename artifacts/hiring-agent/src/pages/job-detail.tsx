@@ -1,10 +1,10 @@
-import { useGetJob, getGetJobQueryKey, useListJobCandidates, getListJobCandidatesQueryKey, useScreenJobCandidates } from "@workspace/api-client-react";
-import { useParams, Link } from "wouter";
+import { useGetJob, getGetJobQueryKey, getListJobsQueryKey, useListJobCandidates, getListJobCandidatesQueryKey, useScreenJobCandidates, useUpdateJob, useDeleteJob } from "@workspace/api-client-react";
+import { useParams, Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { ScoreProgress } from "@/components/score-progress";
-import { Brain, ArrowLeft, Loader2, Search, Filter } from "lucide-react";
+import { Brain, ArrowLeft, Loader2, Search, Filter, XCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,7 +26,40 @@ export default function JobDetail() {
     query: { enabled: !!jobId, queryKey: getListJobCandidatesQueryKey(jobId) }
   });
 
+  const [, setLocation] = useLocation();
   const screenCandidates = useScreenJobCandidates();
+  const updateJob = useUpdateJob();
+  const deleteJob = useDeleteJob();
+
+  const handleClosePosition = () => {
+    if (!jobId) return;
+    if (!confirm("Are you sure you want to close this position?")) return;
+    updateJob.mutate({ id: jobId, data: { status: "closed" } }, {
+      onSuccess: () => {
+        toast({ title: "Position Closed", description: "This job posting has been closed." });
+        queryClient.invalidateQueries({ queryKey: getGetJobQueryKey(jobId) });
+        queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
+      },
+      onError: () => {
+        toast({ title: "Failed to close position", variant: "destructive" });
+      }
+    });
+  };
+
+  const handleDelete = () => {
+    if (!jobId) return;
+    if (!confirm("Are you sure you want to delete this job? This action cannot be undone.")) return;
+    deleteJob.mutate({ id: jobId }, {
+      onSuccess: () => {
+        toast({ title: "Job Deleted", description: "The job posting has been removed." });
+        queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
+        setLocation("/jobs");
+      },
+      onError: () => {
+        toast({ title: "Failed to delete job", variant: "destructive" });
+      }
+    });
+  };
 
   const handleScreening = () => {
     if (!jobId) return;
@@ -64,14 +97,36 @@ export default function JobDetail() {
                 {job.location && <span className="text-muted-foreground">• {job.location}</span>}
               </div>
             </div>
-            <Button 
-              onClick={handleScreening} 
-              disabled={screenCandidates.isPending || job.candidateCount === 0}
-              className="gap-2 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-md border-0"
-            >
-              {screenCandidates.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
-              Run AI Screening
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={handleScreening} 
+                disabled={screenCandidates.isPending || job.candidateCount === 0}
+                className="gap-2 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-md border-0"
+              >
+                {screenCandidates.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
+                Run AI Screening
+              </Button>
+              {job.status !== "closed" && (
+                <Button
+                  variant="outline"
+                  onClick={handleClosePosition}
+                  disabled={updateJob.isPending}
+                  className="gap-2"
+                >
+                  {updateJob.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                  Close Position
+                </Button>
+              )}
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteJob.isPending}
+                className="gap-2"
+              >
+                {deleteJob.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Delete
+              </Button>
+            </div>
           </div>
         </div>
       </div>

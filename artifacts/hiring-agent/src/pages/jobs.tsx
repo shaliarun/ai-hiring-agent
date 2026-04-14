@@ -1,21 +1,57 @@
-import { useListJobs, getListJobsQueryKey } from "@workspace/api-client-react";
+import { useListJobs, getListJobsQueryKey, useUpdateJob, useDeleteJob } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/status-badge";
-import { Plus, Search, MapPin, Building, Users } from "lucide-react";
+import { Plus, Search, MapPin, Building, Users, XCircle, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function JobsList() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { data: jobs, isLoading } = useListJobs({
     query: { queryKey: getListJobsQueryKey() }
   });
+  const updateJob = useUpdateJob();
+  const deleteJob = useDeleteJob();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const handleClosePosition = (e: React.MouseEvent, jobId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to close this position?")) return;
+    updateJob.mutate({ id: jobId, data: { status: "closed" } }, {
+      onSuccess: () => {
+        toast({ title: "Position Closed" });
+        queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
+      },
+      onError: () => {
+        toast({ title: "Failed to close position", variant: "destructive" });
+      }
+    });
+  };
+
+  const handleDelete = (e: React.MouseEvent, jobId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this job? This cannot be undone.")) return;
+    deleteJob.mutate({ id: jobId }, {
+      onSuccess: () => {
+        toast({ title: "Job Deleted" });
+        queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
+      },
+      onError: () => {
+        toast({ title: "Failed to delete job", variant: "destructive" });
+      }
+    });
+  };
 
   const filteredJobs = jobs?.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) || 
@@ -80,7 +116,7 @@ export default function JobsList() {
           {filteredJobs?.map(job => (
             <Card key={job.id} className="hover:border-primary/30 transition-colors group">
               <CardContent className="p-0">
-                <Link href={`/jobs/${job.id}`} className="block p-6">
+                <Link href={`/jobs/${job.id}`} className="block p-6 pb-0">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1.5 flex-1">
                       <div className="flex items-center gap-3">
@@ -117,6 +153,18 @@ export default function JobsList() {
                     </div>
                   </div>
                 </Link>
+                <div className="flex items-center justify-end gap-2 px-6 py-3 border-t mt-4">
+                  {job.status !== "closed" && (
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => handleClosePosition(e, job.id)}>
+                      <XCircle className="h-3.5 w-3.5" />
+                      Close Position
+                    </Button>
+                  )}
+                  <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={(e) => handleDelete(e, job.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
