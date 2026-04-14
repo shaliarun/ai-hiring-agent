@@ -2,11 +2,13 @@ import {
   useGetCandidate, 
   getGetCandidateQueryKey, 
   useUpdateCandidate, 
+  useDeleteCandidate,
   useAddCandidateNote,
   useGetJob,
-  getGetJobQueryKey
+  getGetJobQueryKey,
+  getListJobCandidatesQueryKey
 } from "@workspace/api-client-react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/status-badge";
 import { ScoreProgress } from "@/components/score-progress";
-import { ArrowLeft, Mail, Phone, MapPin, GraduationCap, Clock, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Mail, Phone, MapPin, GraduationCap, Clock, Save, Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,7 +37,9 @@ export default function CandidateDetail() {
     query: { enabled: !!candidate?.jobId, queryKey: getGetJobQueryKey(candidate?.jobId || 0) }
   });
 
+  const [, setLocation] = useLocation();
   const updateCandidate = useUpdateCandidate();
+  const deleteCandidate = useDeleteCandidate();
   const addNote = useAddCandidateNote();
 
   const [notes, setNotes] = useState("");
@@ -70,6 +74,22 @@ export default function CandidateDetail() {
     });
   };
 
+  const handleDelete = () => {
+    if (!confirm("Are you sure you want to delete this candidate? This cannot be undone.")) return;
+    deleteCandidate.mutate({ id: candidateId }, {
+      onSuccess: () => {
+        toast({ title: "Candidate deleted" });
+        if (candidate?.jobId) {
+          queryClient.invalidateQueries({ queryKey: getListJobCandidatesQueryKey(candidate.jobId) });
+        }
+        setLocation("/candidates");
+      },
+      onError: () => {
+        toast({ title: "Failed to delete candidate", variant: "destructive" });
+      }
+    });
+  };
+
   if (loadingCandidate) return <div className="space-y-4"><Skeleton className="h-12 w-1/3" /><Skeleton className="h-[400px] w-full" /></div>;
   if (!candidate) return <div>Candidate not found</div>;
 
@@ -89,21 +109,33 @@ export default function CandidateDetail() {
             </div>
           </div>
           
-          <div className="flex items-center gap-4 bg-card px-4 py-2 rounded-lg border shadow-sm">
-            <span className="text-sm font-medium text-muted-foreground">Status:</span>
-            <Select value={candidate.status} onValueChange={handleStatusChange} disabled={updateCandidate.isPending}>
-              <SelectTrigger className="w-[180px] h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="round1">1st Round</SelectItem>
-                <SelectItem value="round2">2nd Round</SelectItem>
-                <SelectItem value="final">Final Round</SelectItem>
-                <SelectItem value="hired">Hired</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4 bg-card px-4 py-2 rounded-lg border shadow-sm">
+              <span className="text-sm font-medium text-muted-foreground">Status:</span>
+              <Select value={candidate.status} onValueChange={handleStatusChange} disabled={updateCandidate.isPending}>
+                <SelectTrigger className="w-[180px] h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="round1">1st Round</SelectItem>
+                  <SelectItem value="round2">2nd Round</SelectItem>
+                  <SelectItem value="final">Final Round</SelectItem>
+                  <SelectItem value="hired">Hired</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={deleteCandidate.isPending}
+              className="gap-1.5"
+            >
+              {deleteCandidate.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              Delete
+            </Button>
           </div>
         </div>
       </div>
