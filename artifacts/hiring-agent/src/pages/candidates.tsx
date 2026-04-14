@@ -1,4 +1,4 @@
-import { useListCandidates, getListCandidatesQueryKey, useListJobs, getListJobsQueryKey } from "@workspace/api-client-react";
+import { useListCandidates, getListCandidatesQueryKey, useListJobs, getListJobsQueryKey, useDeleteCandidate } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,15 +6,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/status-badge";
 import { ScoreProgress } from "@/components/score-progress";
-import { Search, Download, Filter } from "lucide-react";
+import { Search, Download, Filter, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CandidatesList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobFilter, setJobFilter] = useState("all");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const deleteCandidate = useDeleteCandidate();
 
   const { data: candidates, isLoading } = useListCandidates(
     { status: statusFilter !== "all" ? statusFilter : undefined, jobId: jobFilter !== "all" ? parseInt(jobFilter) : undefined },
@@ -115,6 +120,7 @@ export default function CandidatesList() {
                     <TableHead className="w-[200px]">Match Score</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Applied</TableHead>
+                    <TableHead className="w-[60px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -145,6 +151,28 @@ export default function CandidatesList() {
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {format(new Date(candidate.createdAt), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!confirm(`Delete ${candidate.name}? This cannot be undone.`)) return;
+                              deleteCandidate.mutate({ id: candidate.id }, {
+                                onSuccess: () => {
+                                  toast({ title: "Candidate deleted" });
+                                  queryClient.invalidateQueries({ queryKey: getListCandidatesQueryKey({}) });
+                                },
+                                onError: () => {
+                                  toast({ title: "Failed to delete", variant: "destructive" });
+                                }
+                              });
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
