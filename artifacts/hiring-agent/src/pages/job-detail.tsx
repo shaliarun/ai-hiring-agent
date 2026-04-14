@@ -46,6 +46,20 @@ export default function JobDetail() {
     });
   };
 
+  const handleReopenPosition = () => {
+    if (!jobId) return;
+    updateJob.mutate({ id: jobId, data: { status: "open" } }, {
+      onSuccess: () => {
+        toast({ title: "Position Reopened", description: "This job posting is now open again." });
+        queryClient.invalidateQueries({ queryKey: getGetJobQueryKey(jobId) });
+        queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
+      },
+      onError: () => {
+        toast({ title: "Failed to reopen position", variant: "destructive" });
+      }
+    });
+  };
+
   const handleDelete = () => {
     if (!jobId) return;
     if (!confirm("Are you sure you want to delete this job? This action cannot be undone.")) return;
@@ -106,7 +120,17 @@ export default function JobDetail() {
                 {screenCandidates.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
                 Run AI Screening
               </Button>
-              {job.status !== "closed" && (
+              {job.status === "closed" ? (
+                <Button
+                  variant="outline"
+                  onClick={handleReopenPosition}
+                  disabled={updateJob.isPending}
+                  className="gap-2"
+                >
+                  {updateJob.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                  Reopen Position
+                </Button>
+              ) : (
                 <Button
                   variant="outline"
                   onClick={handleClosePosition}
