@@ -28,31 +28,23 @@ export default function CandidatesList() {
            c.email.toLowerCase().includes(search.toLowerCase());
   }).sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
 
-  const exportCSV = () => {
+  const exportXlsx = async () => {
     if (!filteredCandidates) return;
-    const headers = ["Name", "Email", "Phone", "Job ID", "Status", "Match Score", "Shortlisted", "Applied"];
-    const csvContent = [
-      headers.join(","),
-      ...filteredCandidates.map(c => [
-        `"${c.name}"`,
-        `"${c.email}"`,
-        `"${c.phone || ""}"`,
-        c.jobId,
-        c.status,
-        c.matchScore || "",
-        c.shortlisted ? "Yes" : "No",
-        format(new Date(c.createdAt), "yyyy-MM-dd")
-      ].join(","))
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `candidates_export_${format(new Date(), "yyyyMMdd")}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const XLSX = await import("xlsx");
+    const rows = filteredCandidates.map(c => ({
+      Name: c.name,
+      Email: c.email,
+      Phone: c.phone || "",
+      "Job ID": c.jobId,
+      Status: c.status,
+      "Match Score": c.matchScore || "",
+      Shortlisted: c.shortlisted ? "Yes" : "No",
+      Applied: format(new Date(c.createdAt), "yyyy-MM-dd"),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Candidates");
+    XLSX.writeFile(wb, `candidates_export_${format(new Date(), "yyyyMMdd")}.xlsx`);
   };
 
   return (
@@ -62,9 +54,9 @@ export default function CandidatesList() {
           <h1 className="text-3xl font-bold tracking-tight">Candidates</h1>
           <p className="text-muted-foreground mt-1">Review and manage the global candidate pool.</p>
         </div>
-        <Button onClick={exportCSV} variant="outline" className="gap-2">
+        <Button onClick={exportXlsx} variant="outline" className="gap-2">
           <Download className="h-4 w-4" />
-          Export CSV
+          Export XLSX
         </Button>
       </div>
 
