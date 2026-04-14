@@ -6,6 +6,7 @@ export const jobsTable = pgTable("jobs", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   department: text("department").notNull(),
+  description: text("description"),
   requiredSkills: jsonb("required_skills").notNull().$type<string[]>().default([]),
   niceToHaveSkills: jsonb("nice_to_have_skills").notNull().$type<string[]>().default([]),
   keywords: jsonb("keywords").notNull().$type<string[]>().default([]),

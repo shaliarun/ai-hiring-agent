@@ -11,6 +11,8 @@ export interface Job {
   id: number;
   title: string;
   department: string;
+  /** @nullable */
+  description: string | null;
   requiredSkills: string[];
   niceToHaveSkills: string[];
   keywords: string[];

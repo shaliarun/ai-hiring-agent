@@ -19,6 +19,7 @@ export default function CreateJob() {
 
   const [title, setTitle] = useState("");
   const [department, setDepartment] = useState("");
+  const [description, setDescription] = useState("");
   const [requiredSkills, setRequiredSkills] = useState<string[]>([]);
   const [niceToHaveSkills, setNiceToHaveSkills] = useState<string[]>([]);
   const [keywords, setKeywords] = useState<string[]>([]);
@@ -71,6 +72,7 @@ export default function CreateJob() {
       data: {
         title,
         department,
+        description: description || null,
         requiredSkills,
         niceToHaveSkills,
         keywords,
@@ -119,6 +121,10 @@ export default function CreateJob() {
               <div className="space-y-2">
                 <Label htmlFor="department">Department *</Label>
                 <Input id="department" value={department} onChange={e => setDepartment(e.target.value)} placeholder="e.g. Engineering" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="description">Job Description</Label>
+                <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Describe the role, responsibilities, and what a typical day looks like..." className="min-h-[120px]" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>

@@ -76,6 +76,17 @@ export default function JobDetail() {
         </div>
       </div>
 
+      {job.description && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Job Description</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{job.description}</p>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">
           <CardHeader>

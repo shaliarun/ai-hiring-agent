@@ -10,6 +10,8 @@ import type { UpdateJobBodyStatus } from "./updateJobBodyStatus";
 export interface UpdateJobBody {
   title?: string;
   department?: string;
+  /** @nullable */
+  description?: string | null;
   requiredSkills?: string[];
   niceToHaveSkills?: string[];
   keywords?: string[];

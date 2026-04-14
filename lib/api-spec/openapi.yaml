@@ -369,6 +369,8 @@ components:
           type: string
         department:
           type: string
+        description:
+          type: ["string", "null"]
         requiredSkills:
           type: array
           items:
@@ -410,6 +412,7 @@ components:
         - id
         - title
         - department
+        - description
         - requiredSkills
         - niceToHaveSkills
         - keywords
@@ -432,6 +435,8 @@ components:
           type: string
         department:
           type: string
+        description:
+          type: ["string", "null"]
         requiredSkills:
           type: array
           items:
@@ -468,6 +473,8 @@ components:
           type: string
         department:
           type: string
+        description:
+          type: ["string", "null"]
         requiredSkills:
           type: array
           items:

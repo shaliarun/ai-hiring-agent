@@ -21,6 +21,8 @@ export interface Job {
   id: number;
   title: string;
   department: string;
+  /** @nullable */
+  description: string | null;
   requiredSkills: string[];
   niceToHaveSkills: string[];
   keywords: string[];
@@ -46,6 +48,8 @@ export interface Job {
 export interface CreateJobBody {
   title: string;
   department: string;
+  /** @nullable */
+  description?: string | null;
   requiredSkills: string[];
   niceToHaveSkills?: string[];
   keywords?: string[];
@@ -75,6 +79,8 @@ export const UpdateJobBodyStatus = {
 export interface UpdateJobBody {
   title?: string;
   department?: string;
+  /** @nullable */
+  description?: string | null;
   requiredSkills?: string[];
   niceToHaveSkills?: string[];
   keywords?: string[];
