@@ -193,7 +193,7 @@ router.post("/jobs/:id/screen", async (req, res): Promise<void> => {
 
   const updatedCandidates = [];
   for (const candidate of pendingCandidates) {
-    const score = scoreCandidate(candidate, job);
+    const score = await scoreCandidate(candidate, job);
     const [updated] = await db
       .update(candidatesTable)
       .set({

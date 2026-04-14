@@ -173,7 +173,7 @@ router.post("/resumes/upload", async (req, res): Promise<void> => {
       resume.phone ?? undefined,
     );
 
-    const score = scoreCandidate({ ...parsedResume, resumeText: resume.resumeText, skills: parsedResume.skills }, job);
+    const score = await scoreCandidate({ ...parsedResume, resumeText: resume.resumeText, skills: parsedResume.skills }, job);
 
     const [candidate] = await db.insert(candidatesTable).values({
       jobId: parsed.data.jobId,

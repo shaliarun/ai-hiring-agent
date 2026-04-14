@@ -1,41 +1,171 @@
 import type { Job, Candidate } from "@workspace/db";
+import OpenAI from "openai";
 
-const SKILL_SYNONYMS: Record<string, string[]> = {
-  "react": ["reactjs", "react.js", "frontend development", "front-end", "spa", "jsx"],
-  "node": ["nodejs", "node.js", "server-side javascript", "backend javascript"],
-  "python": ["py", "django", "flask", "fastapi"],
-  "typescript": ["ts", "typed javascript"],
-  "javascript": ["js", "es6", "ecmascript"],
-  "aws": ["amazon web services", "cloud", "s3", "ec2", "lambda"],
-  "sql": ["postgresql", "postgres", "mysql", "database", "rdbms"],
-  "mongodb": ["mongo", "nosql", "document database"],
-  "docker": ["containerization", "containers", "kubernetes", "k8s"],
-  "machine learning": ["ml", "ai", "deep learning", "neural networks", "tensorflow", "pytorch"],
-  "java": ["spring", "spring boot", "jvm"],
-  "devops": ["ci/cd", "jenkins", "github actions", "deployment", "infrastructure"],
-  "agile": ["scrum", "kanban", "sprint", "jira"],
-  "communication": ["verbal communication", "written communication", "presentation"],
-  "leadership": ["team lead", "management", "mentoring", "people management"],
-};
+const openai = new OpenAI({
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  timeout: 25000,
+});
 
-function normalizeSkill(skill: string): string {
-  return skill.toLowerCase().trim();
+export interface ParsedResume {
+  name: string;
+  email: string;
+  phone?: string;
+  skills: string[];
+  experienceYears: number | null;
+  education: string | null;
+  location: string | null;
 }
 
-function skillsMatch(candidateSkill: string, requiredSkill: string): boolean {
-  const cs = normalizeSkill(candidateSkill);
-  const rs = normalizeSkill(requiredSkill);
+export function parseResume(resumeText: string, name: string, email: string, phone?: string): ParsedResume {
+  const skills = extractSkillsFromText(resumeText);
+  const experienceYears = extractExperienceFromText(resumeText);
 
-  if (cs === rs) return true;
-  if (cs.includes(rs) || rs.includes(cs)) return true;
+  const educationPatterns = [
+    /\b(bachelor|b\.?s\.?|b\.?e\.?|b\.?tech|master|m\.?s\.?|m\.?e\.?|m\.?tech|phd|ph\.?d|mba|associate|diploma)\b/gi,
+  ];
 
-  const synonyms = SKILL_SYNONYMS[rs] || [];
-  if (synonyms.some(s => cs.includes(s) || s.includes(cs))) return true;
+  let education: string | null = null;
+  for (const pattern of educationPatterns) {
+    const match = pattern.exec(resumeText);
+    if (match) {
+      education = match[0].charAt(0).toUpperCase() + match[0].slice(1).toLowerCase();
+      break;
+    }
+  }
 
-  const candidateSynonyms = SKILL_SYNONYMS[cs] || [];
-  if (candidateSynonyms.some(s => s === rs || s.includes(rs) || rs.includes(s))) return true;
+  const locationPattern = /(?:location|based in|from|city)[:\s]+([A-Za-z\s,]+?)(?:\n|$)/i;
+  const locationMatch = locationPattern.exec(resumeText);
+  const location = locationMatch ? locationMatch[1].trim() : null;
 
-  return false;
+  return { name, email, phone, skills, experienceYears, education, location };
+}
+
+export interface ScreeningScore {
+  matchScore: number;
+  matchedSkills: string[];
+  rejectionReason: string | null;
+  shortlisted: boolean;
+}
+
+export async function scoreCandidateWithAI(candidate: Partial<Candidate>, job: Job): Promise<ScreeningScore> {
+  const jobDescription = buildJobContext(job);
+  const resumeContent = buildCandidateContext(candidate);
+
+  const systemPrompt = `You are an expert HR recruiter. Evaluate resume vs job posting. Score 0-100.
+
+Scoring weights: Skills Match 40%, Experience Relevance 25%, Domain Fit 15%, Education 10%, Keywords 10%.
+
+Score guide: 80-100=excellent match, 60-79=good match, 40-59=partial match, 0-39=poor match.
+Be rigorous: a UX designer for an ML Engineer role scores <30. Relevance > tenure.
+
+Respond ONLY with JSON (no markdown):
+{"matchScore":<0-100>,"matchedSkills":[<matched skills>],"reasoning":"<1-2 sentences>","rejectionReason":<null or "reason">}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-5-nano",
+      max_completion_tokens: 512,
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: `## Job Posting\n${jobDescription}\n\n## Candidate Resume\n${resumeContent}`,
+        },
+      ],
+    });
+
+    const content = response.choices[0]?.message?.content?.trim();
+    if (!content) {
+      return fallbackScoring(candidate, job);
+    }
+
+    const cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+
+    const matchScore = Math.min(100, Math.max(0, Math.round(parsed.matchScore || 0)));
+    const matchedSkills = Array.isArray(parsed.matchedSkills) ? parsed.matchedSkills : [];
+    const shortlisted = matchScore >= 60;
+    const rejectionReason = shortlisted ? null : (parsed.rejectionReason || parsed.reasoning || "Overall match score below shortlisting threshold");
+
+    return { matchScore, matchedSkills, rejectionReason, shortlisted };
+  } catch (error: any) {
+    process.stderr.write(`AI screening error: ${error?.message || error}\n`);
+    if (error?.stack) process.stderr.write(`Stack: ${error.stack}\n`);
+    return fallbackScoring(candidate, job);
+  }
+}
+
+function buildJobContext(job: Job): string {
+  const parts: string[] = [];
+  parts.push(`**Title:** ${job.title}`);
+  parts.push(`**Department:** ${job.department}`);
+  if (job.description) parts.push(`**Description:** ${job.description}`);
+  if (job.location) parts.push(`**Location:** ${job.location}`);
+
+  const reqSkills = (job.requiredSkills as string[]) || [];
+  if (reqSkills.length > 0) parts.push(`**Required Skills:** ${reqSkills.join(", ")}`);
+
+  const niceSkills = (job.niceToHaveSkills as string[]) || [];
+  if (niceSkills.length > 0) parts.push(`**Nice-to-Have Skills:** ${niceSkills.join(", ")}`);
+
+  const keywords = (job.keywords as string[]) || [];
+  if (keywords.length > 0) parts.push(`**Keywords:** ${keywords.join(", ")}`);
+
+  if (job.experienceMin != null || job.experienceMax != null) {
+    const range = [job.experienceMin ?? 0, job.experienceMax ?? "∞"].join(" - ");
+    parts.push(`**Experience Required:** ${range} years`);
+  }
+  if (job.education) parts.push(`**Education:** ${job.education}`);
+  if (job.salaryMin != null || job.salaryMax != null) {
+    parts.push(`**Salary Range:** $${job.salaryMin?.toLocaleString() ?? "?"} - $${job.salaryMax?.toLocaleString() ?? "?"}`);
+  }
+
+  return parts.join("\n");
+}
+
+function buildCandidateContext(candidate: Partial<Candidate>): string {
+  const parts: string[] = [];
+  if (candidate.name) parts.push(`**Name:** ${candidate.name}`);
+  if (candidate.email) parts.push(`**Email:** ${candidate.email}`);
+
+  const skills = (candidate.skills as string[]) || [];
+  if (skills.length > 0) parts.push(`**Listed Skills:** ${skills.join(", ")}`);
+
+  if (candidate.experienceYears != null) parts.push(`**Experience:** ${candidate.experienceYears} years`);
+  if (candidate.education) parts.push(`**Education:** ${candidate.education}`);
+  if (candidate.location) parts.push(`**Location:** ${candidate.location}`);
+
+  if (candidate.resumeText) {
+    const truncated = candidate.resumeText.length > 2000
+      ? candidate.resumeText.substring(0, 2000) + "\n[... resume truncated ...]"
+      : candidate.resumeText;
+    parts.push(`\n**Full Resume Text:**\n${truncated}`);
+  }
+
+  return parts.join("\n");
+}
+
+function fallbackScoring(candidate: Partial<Candidate>, job: Job): ScreeningScore {
+  const candidateSkills = (candidate.skills as string[]) || [];
+  const requiredSkills = (job.requiredSkills as string[]) || [];
+
+  const matchedSkills: string[] = [];
+  for (const req of requiredSkills) {
+    const reqLower = req.toLowerCase();
+    if (candidateSkills.some(cs => cs.toLowerCase().includes(reqLower) || reqLower.includes(cs.toLowerCase()))) {
+      matchedSkills.push(req);
+    }
+  }
+
+  const matchScore = requiredSkills.length > 0
+    ? Math.round((matchedSkills.length / requiredSkills.length) * 100)
+    : 50;
+
+  const shortlisted = matchScore >= 60;
+  const rejectionReason = shortlisted ? null : "Insufficient skill match for this position";
+
+  return { matchScore, matchedSkills, rejectionReason, shortlisted };
 }
 
 function extractExperienceFromText(text: string): number | null {
@@ -64,6 +194,9 @@ function extractSkillsFromText(text: string): string[] {
     "html", "css", "tailwind", "graphql", "rest", "microservices", "devops",
     "agile", "scrum", "leadership", "communication", "project management",
     "git", "linux", "bash", "ci/cd", "terraform", "ansible",
+    "ux design", "ui design", "figma", "sketch", "adobe xd", "wireframing",
+    "prototyping", "design thinking", "user research", "usability testing",
+    "accessibility", "responsive design", "design systems", "interaction design",
   ];
 
   const lower = text.toLowerCase();
@@ -78,165 +211,4 @@ function extractSkillsFromText(text: string): string[] {
   return [...new Set(found)];
 }
 
-export interface ParsedResume {
-  name: string;
-  email: string;
-  phone?: string;
-  skills: string[];
-  experienceYears: number | null;
-  education: string | null;
-  location: string | null;
-}
-
-export function parseResume(resumeText: string, name: string, email: string, phone?: string): ParsedResume {
-  const skills = extractSkillsFromText(resumeText);
-  const experienceYears = extractExperienceFromText(resumeText);
-
-  const educationPatterns = [
-    /\b(bachelor|b\.?s\.?|b\.?e\.?|b\.?tech|master|m\.?s\.?|m\.?e\.?|m\.?tech|phd|ph\.?d|mba|associate)\b/gi,
-  ];
-
-  let education: string | null = null;
-  for (const pattern of educationPatterns) {
-    const match = pattern.exec(resumeText);
-    if (match) {
-      education = match[0].charAt(0).toUpperCase() + match[0].slice(1).toLowerCase();
-      break;
-    }
-  }
-
-  const locationPattern = /(?:location|based in|from|city)[:\s]+([A-Za-z\s,]+?)(?:\n|$)/i;
-  const locationMatch = locationPattern.exec(resumeText);
-  const location = locationMatch ? locationMatch[1].trim() : null;
-
-  return {
-    name,
-    email,
-    phone,
-    skills,
-    experienceYears,
-    education,
-    location,
-  };
-}
-
-export interface ScreeningScore {
-  matchScore: number;
-  matchedSkills: string[];
-  rejectionReason: string | null;
-  shortlisted: boolean;
-}
-
-export function scoreCandidate(candidate: Partial<Candidate>, job: Job): ScreeningScore {
-  const candidateSkills = (candidate.skills as string[]) || [];
-  const experienceYears = candidate.experienceYears || 0;
-  const requiredSkills = (job.requiredSkills as string[]) || [];
-  const niceToHaveSkills = (job.niceToHaveSkills as string[]) || [];
-  const keywords = (job.keywords as string[]) || [];
-
-  let skillScore = 0;
-  const matchedSkills: string[] = [];
-
-  if (requiredSkills.length > 0) {
-    let matched = 0;
-    for (const required of requiredSkills) {
-      const match = candidateSkills.find(cs => skillsMatch(cs, required));
-      if (match) {
-        matched++;
-        matchedSkills.push(required);
-      }
-    }
-    skillScore = (matched / requiredSkills.length) * 100;
-  } else {
-    skillScore = 60;
-  }
-
-  let niceScore = 0;
-  if (niceToHaveSkills.length > 0) {
-    let niceMatched = 0;
-    for (const nice of niceToHaveSkills) {
-      if (candidateSkills.find(cs => skillsMatch(cs, nice))) {
-        niceMatched++;
-      }
-    }
-    niceScore = (niceMatched / niceToHaveSkills.length) * 100;
-  }
-
-  let experienceScore = 0;
-  if (job.experienceMin != null || job.experienceMax != null) {
-    const min = job.experienceMin ?? 0;
-    const max = job.experienceMax ?? 100;
-    if (experienceYears >= min && experienceYears <= max) {
-      experienceScore = 100;
-    } else if (experienceYears < min) {
-      const deficit = min - experienceYears;
-      experienceScore = Math.max(0, 100 - deficit * 20);
-    } else {
-      experienceScore = 85;
-    }
-  } else {
-    experienceScore = 70;
-  }
-
-  let keywordScore = 0;
-  if (keywords.length > 0 && candidate.resumeText) {
-    const resumeLower = candidate.resumeText.toLowerCase();
-    const matched = keywords.filter(k => resumeLower.includes(k.toLowerCase()));
-    keywordScore = (matched.length / keywords.length) * 100;
-  } else {
-    keywordScore = 50;
-  }
-
-  const WEIGHTS = { skills: 0.50, experience: 0.30, education: 0.10, keywords: 0.10 };
-
-  let educationScore = 50;
-  if (job.education && candidate.education) {
-    const jEd = job.education.toLowerCase();
-    const cEd = candidate.education.toLowerCase();
-    if (cEd.includes("phd") || cEd.includes("ph.d")) {
-      educationScore = 100;
-    } else if (cEd.includes("master") || cEd.includes("mba")) {
-      educationScore = jEd.includes("master") || jEd.includes("phd") ? 90 : 100;
-    } else if (cEd.includes("bachelor") || cEd.includes("b.s") || cEd.includes("b.e")) {
-      educationScore = jEd.includes("bachelor") ? 85 : 60;
-    } else {
-      educationScore = 50;
-    }
-  }
-
-  const finalScore = Math.round(
-    skillScore * WEIGHTS.skills +
-    experienceScore * WEIGHTS.experience +
-    educationScore * WEIGHTS.education +
-    keywordScore * WEIGHTS.keywords
-  );
-
-  const clampedScore = Math.min(100, Math.max(0, finalScore));
-
-  let rejectionReason: string | null = null;
-  const shortlisted = clampedScore >= 60;
-
-  if (!shortlisted) {
-    const reasons: string[] = [];
-    if (skillScore < 40) {
-      const missingSkills = requiredSkills.filter(rs => !candidateSkills.find(cs => skillsMatch(cs, rs)));
-      if (missingSkills.length > 0) {
-        reasons.push(`Missing required skills: ${missingSkills.slice(0, 3).join(", ")}`);
-      }
-    }
-    if (job.experienceMin != null && experienceYears < job.experienceMin) {
-      reasons.push(`Insufficient experience (${experienceYears}y, required ${job.experienceMin}y+)`);
-    }
-    if (reasons.length === 0) {
-      reasons.push("Overall match score below shortlisting threshold");
-    }
-    rejectionReason = reasons.join(". ");
-  }
-
-  return {
-    matchScore: clampedScore,
-    matchedSkills,
-    rejectionReason,
-    shortlisted,
-  };
-}
+export { scoreCandidateWithAI as scoreCandidate };

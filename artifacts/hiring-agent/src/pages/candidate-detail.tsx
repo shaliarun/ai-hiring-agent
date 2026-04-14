@@ -162,16 +162,6 @@ export default function CandidateDetail() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Resume Text</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted/30 p-4 rounded-md text-sm font-mono whitespace-pre-wrap h-[300px] overflow-y-auto border">
-                {candidate.resumeText || "No resume text available."}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="space-y-6">
