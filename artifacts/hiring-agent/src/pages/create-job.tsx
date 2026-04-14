@@ -30,13 +30,28 @@ export default function CreateJob() {
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string[]>>, list: string[]) => {
-    if (e.key === "Enter" && e.currentTarget.value) {
-      e.preventDefault();
-      const val = e.currentTarget.value.trim();
-      if (val && !list.includes(val)) {
-        setter([...list, val]);
+  const addTagsFromValue = (value: string, setter: React.Dispatch<React.SetStateAction<string[]>>, list: string[]) => {
+    const parts = value.split(",").map(s => s.trim()).filter(Boolean);
+    const newList = [...list];
+    for (const part of parts) {
+      if (!newList.includes(part)) {
+        newList.push(part);
       }
+    }
+    setter(newList);
+  };
+
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string[]>>, list: string[]) => {
+    if ((e.key === "Enter" || e.key === ",") && e.currentTarget.value) {
+      e.preventDefault();
+      addTagsFromValue(e.currentTarget.value, setter, list);
+      e.currentTarget.value = "";
+    }
+  };
+
+  const handleBlurTag = (e: React.FocusEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string[]>>, list: string[]) => {
+    if (e.currentTarget.value.trim()) {
+      addTagsFromValue(e.currentTarget.value, setter, list);
       e.currentTarget.value = "";
     }
   };
@@ -123,7 +138,7 @@ export default function CreateJob() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label>Required Skills * (Press Enter to add)</Label>
+              <Label>Required Skills * (Type and press Enter or comma to add)</Label>
               <div className="border rounded-md p-2 flex flex-wrap gap-2 bg-background">
                 {requiredSkills.map(skill => (
                   <span key={skill} className="bg-primary/10 text-primary text-xs px-2 py-1 rounded flex items-center gap-1 font-medium">
@@ -138,12 +153,13 @@ export default function CreateJob() {
                   className="flex-1 outline-none bg-transparent min-w-[120px] text-sm" 
                   placeholder="e.g. React, TypeScript..." 
                   onKeyDown={e => handleAddTag(e, setRequiredSkills, requiredSkills)}
+                  onBlur={e => handleBlurTag(e, setRequiredSkills, requiredSkills)}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Nice to Have Skills (Press Enter to add)</Label>
+              <Label>Nice to Have Skills (Type and press Enter or comma to add)</Label>
               <div className="border rounded-md p-2 flex flex-wrap gap-2 bg-background">
                 {niceToHaveSkills.map(skill => (
                   <span key={skill} className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded flex items-center gap-1 font-medium">
@@ -158,12 +174,13 @@ export default function CreateJob() {
                   className="flex-1 outline-none bg-transparent min-w-[120px] text-sm" 
                   placeholder="e.g. GraphQL, Docker..." 
                   onKeyDown={e => handleAddTag(e, setNiceToHaveSkills, niceToHaveSkills)}
+                  onBlur={e => handleBlurTag(e, setNiceToHaveSkills, niceToHaveSkills)}
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label>Keywords for AI Screening (Press Enter to add)</Label>
+              <Label>Keywords for AI Screening (Type and press Enter or comma to add)</Label>
               <div className="border rounded-md p-2 flex flex-wrap gap-2 bg-background">
                 {keywords.map(kw => (
                   <span key={kw} className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded flex items-center gap-1 font-medium">
@@ -178,6 +195,7 @@ export default function CreateJob() {
                   className="flex-1 outline-none bg-transparent min-w-[120px] text-sm" 
                   placeholder="e.g. leadership, agile..." 
                   onKeyDown={e => handleAddTag(e, setKeywords, keywords)}
+                  onBlur={e => handleBlurTag(e, setKeywords, keywords)}
                 />
               </div>
             </div>
