@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import JobsList from "@/pages/jobs";
 import CreateJob from "@/pages/create-job";
 import JobDetail from "@/pages/job-detail";
+import EditJob from "@/pages/edit-job";
 import CandidatesList from "@/pages/candidates";
 import CandidateDetail from "@/pages/candidate-detail";
 import HRPortal from "@/pages/hr-portal";
@@ -30,6 +31,7 @@ function AppContent() {
         <Route path="/" component={Dashboard} />
         <Route path="/jobs" component={JobsList} />
         <Route path="/jobs/new" component={CreateJob} />
+        <Route path="/jobs/:id/edit" component={EditJob} />
         <Route path="/jobs/:id" component={JobDetail} />
         <Route path="/candidates" component={CandidatesList} />
         <Route path="/candidates/:id" component={CandidateDetail} />

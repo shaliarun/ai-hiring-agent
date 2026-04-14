@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { ScoreProgress } from "@/components/score-progress";
-import { Brain, ArrowLeft, Loader2, Search, Filter, XCircle, Trash2, RefreshCcw } from "lucide-react";
+import { Brain, ArrowLeft, Loader2, Search, Filter, XCircle, Trash2, RefreshCcw, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,6 +112,14 @@ export default function JobDetail() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setLocation(`/jobs/${jobId}/edit`)}
+                className="gap-2"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
               <Button 
                 onClick={handleScreening} 
                 disabled={screenCandidates.isPending || job.candidateCount === 0}
