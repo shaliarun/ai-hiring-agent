@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
+import multer from "multer";
 import { db, candidatesTable, jobsTable, activityTable } from "@workspace/db";
 import {
   GetCandidateParams,
@@ -12,6 +13,9 @@ import {
   UploadResumesBody,
 } from "@workspace/api-zod";
 import { parseResume, scoreCandidate } from "../lib/screening";
+import { parseFileBuffer } from "../lib/file-parser";
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const router: IRouter = Router();
 
@@ -198,6 +202,37 @@ router.post("/resumes/upload", async (req, res): Promise<void> => {
   });
 
   res.status(201).json(created);
+});
+
+router.post("/resumes/parse", upload.array("files", 20), async (req, res): Promise<void> => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      res.status(400).json({ error: "No files uploaded" });
+      return;
+    }
+
+    const results = [];
+    for (const file of files) {
+      try {
+        const parsed = await parseFileBuffer(file.buffer, file.originalname, file.mimetype);
+        results.push(parsed);
+      } catch (err) {
+        results.push({
+          text: "",
+          name: "",
+          email: "",
+          phone: "",
+          fileName: file.originalname,
+          error: "Failed to parse file",
+        });
+      }
+    }
+
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: "File parsing failed" });
+  }
 });
 
 export default router;

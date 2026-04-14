@@ -29,11 +29,11 @@ AI-powered Employee Hiring Agent system with role-based access (HR, Department M
 ## Features
 
 1. **Job Criteria Submission** — Department Managers create job postings with required/nice-to-have skills, experience range, education, location, salary
-2. **Resume Upload** — HR uploads candidate resumes (text-based) attached to specific jobs
+2. **Resume Upload** — HR uploads resume files (PDF, Word, Excel, PowerPoint) via drag-and-drop; AI auto-extracts name, email, phone, and resume text from uploaded files. Multiple files create individual forms with a "Submit All" button.
 3. **AI Screening Engine** — Semantic skill matching with weighted scoring (Skills 50%, Experience 30%, Education 10%, Keywords 10%)
 4. **Shortlisting Dashboard** — Filtered/sorted candidate views with match scores
 5. **Hiring Manager Dashboard** — Status management (Pending → Round 1 → Round 2 → Final → Hired/Rejected), interview notes
-6. **Export** — CSV export of candidate data
+6. **Export** — XLSX export of candidate data
 7. **Pipeline Analytics** — Dashboard with pipeline stage breakdown, recent activity feed
 
 ## Database Tables
