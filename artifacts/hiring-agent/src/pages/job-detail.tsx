@@ -76,16 +76,18 @@ export default function JobDetail() {
         </div>
       </div>
 
-      {job.description && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Description</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Job Description</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {job.description ? (
             <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{job.description}</p>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-sm text-muted-foreground italic">No description provided.</p>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">
@@ -101,9 +103,17 @@ export default function JobDetail() {
             </div>
             {job.niceToHaveSkills && job.niceToHaveSkills.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium mb-2">Nice to Have</h4>
+                <h4 className="text-sm font-medium mb-2">Nice to Have Skills</h4>
                 <div className="flex flex-wrap gap-2">
                   {job.niceToHaveSkills.map(s => <Badge key={s} variant="outline">{s}</Badge>)}
+                </div>
+              </div>
+            )}
+            {job.keywords && job.keywords.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">Keywords for AI Screening</h4>
+                <div className="flex flex-wrap gap-2">
+                  {job.keywords.map(k => <Badge key={k} variant="outline" className="bg-muted text-muted-foreground">{k}</Badge>)}
                 </div>
               </div>
             )}
@@ -116,10 +126,20 @@ export default function JobDetail() {
                 <h4 className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Education</h4>
                 <p className="mt-1 font-medium">{job.education || "Any"}</p>
               </div>
-              {job.salaryMin && job.salaryMax && (
-                <div className="col-span-2">
+              <div>
+                <h4 className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Location</h4>
+                <p className="mt-1 font-medium">{job.location || "Any"}</p>
+              </div>
+              {(job.salaryMin || job.salaryMax) && (
+                <div>
                   <h4 className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Salary</h4>
-                  <p className="mt-1 font-medium">${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}</p>
+                  <p className="mt-1 font-medium">
+                    {job.salaryMin && job.salaryMax
+                      ? `$${job.salaryMin.toLocaleString()} - $${job.salaryMax.toLocaleString()}`
+                      : job.salaryMin
+                        ? `From $${job.salaryMin.toLocaleString()}`
+                        : `Up to $${job.salaryMax!.toLocaleString()}`}
+                  </p>
                 </div>
               )}
             </div>
