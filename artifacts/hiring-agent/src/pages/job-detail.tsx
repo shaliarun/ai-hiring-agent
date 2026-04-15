@@ -1,10 +1,10 @@
-import { useGetJob, getGetJobQueryKey, getListJobsQueryKey, useListJobCandidates, getListJobCandidatesQueryKey, useScreenJobCandidates, useUpdateJob, useDeleteJob } from "@workspace/api-client-react";
+import { useGetJob, getGetJobQueryKey, getListJobsQueryKey, useListJobCandidates, getListJobCandidatesQueryKey, useUpdateJob, useDeleteJob } from "@workspace/api-client-react";
 import { useParams, Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { ScoreProgress } from "@/components/score-progress";
-import { Brain, ArrowLeft, Loader2, Search, Filter, XCircle, Trash2, RefreshCcw, Pencil } from "lucide-react";
+import { ArrowLeft, Loader2, Search, Filter, XCircle, Trash2, RefreshCcw, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,7 +27,7 @@ export default function JobDetail() {
   });
 
   const [, setLocation] = useLocation();
-  const screenCandidates = useScreenJobCandidates();
+
   const updateJob = useUpdateJob();
   const deleteJob = useDeleteJob();
 
@@ -75,22 +75,6 @@ export default function JobDetail() {
     });
   };
 
-  const handleScreening = () => {
-    if (!jobId) return;
-    screenCandidates.mutate({ id: jobId }, {
-      onSuccess: (res) => {
-        toast({ 
-          title: "Screening Complete", 
-          description: `Screened ${res.screened} candidates. ${res.shortlisted} shortlisted.` 
-        });
-        queryClient.invalidateQueries({ queryKey: getListJobCandidatesQueryKey(jobId) });
-        queryClient.invalidateQueries({ queryKey: getGetJobQueryKey(jobId) });
-      },
-      onError: () => {
-        toast({ title: "Screening Failed", variant: "destructive" });
-      }
-    });
-  };
 
   if (loadingJob) return <div className="space-y-4"><Skeleton className="h-12 w-1/3" /><Skeleton className="h-[200px] w-full" /></div>;
   if (!job) return <div>Job not found</div>;
@@ -119,14 +103,6 @@ export default function JobDetail() {
               >
                 <Pencil className="h-4 w-4" />
                 Edit
-              </Button>
-              <Button 
-                onClick={handleScreening} 
-                disabled={screenCandidates.isPending || job.candidateCount === 0}
-                className="gap-2 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-md border-0"
-              >
-                {screenCandidates.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
-                Run AI Screening
               </Button>
               {job.status === "closed" ? (
                 <Button
