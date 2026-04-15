@@ -4,7 +4,7 @@ import OpenAI from "openai";
 const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  timeout: 25000,
+  timeout: 60000,
 });
 
 export interface ParsedResume {
@@ -64,8 +64,8 @@ Respond ONLY with JSON (no markdown):
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5-nano",
-      max_completion_tokens: 512,
+      model: "gpt-5.2",
+      max_completion_tokens: 8192,
       messages: [
         { role: "system", content: systemPrompt },
         {
