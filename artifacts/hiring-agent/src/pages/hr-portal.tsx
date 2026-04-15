@@ -15,6 +15,8 @@ interface ResumeEntry {
   phone: string;
   resumeText: string;
   fileName: string;
+  fileData?: string;
+  fileMime?: string;
   parsing: boolean;
   parsed: boolean;
 }
@@ -69,6 +71,8 @@ export default function HRPortal() {
         email: string;
         phone: string;
         fileName: string;
+        fileData?: string;
+        fileMime?: string;
         error?: string;
       }> = await resp.json();
 
@@ -83,6 +87,8 @@ export default function HRPortal() {
               phone: result.phone || "",
               resumeText: result.text || "",
               fileName: result.fileName,
+              fileData: result.fileData,
+              fileMime: result.fileMime,
               parsing: false,
               parsed: true,
             };
@@ -158,6 +164,8 @@ export default function HRPortal() {
           phone: r.phone || null,
           resumeText: r.resumeText,
           fileName: r.fileName,
+          fileData: r.fileData || null,
+          fileMime: r.fileMime || null,
         }))
       }
     }, {
@@ -335,6 +343,8 @@ export default function HRPortal() {
                                     phone: result.phone || updated[index].phone,
                                     resumeText: result.text || "",
                                     fileName: result.fileName,
+                                    fileData: result.fileData,
+                                    fileMime: result.fileMime,
                                     parsing: false,
                                     parsed: true,
                                   };

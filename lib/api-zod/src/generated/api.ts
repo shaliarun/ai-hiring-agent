@@ -367,6 +367,8 @@ export const UploadResumesBody = zod.object({
       phone: zod.string().nullish(),
       resumeText: zod.string(),
       fileName: zod.string(),
+      fileData: zod.string().nullish(),
+      fileMime: zod.string().nullish(),
     }),
   ),
 });

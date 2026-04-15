@@ -37,7 +37,8 @@ router.get("/candidates", async (req, res): Promise<void> => {
     }
   }
 
-  res.json(candidates);
+  const cleaned = candidates.map(({ resumeFileData, ...rest }) => rest);
+  res.json(cleaned);
 });
 
 router.get("/candidates/:id", async (req, res): Promise<void> => {
@@ -185,6 +186,9 @@ router.post("/resumes/upload", async (req, res): Promise<void> => {
       education: parsedResume.education,
       location: parsedResume.location,
       resumeText: resume.resumeText,
+      resumeFileName: resume.fileName ?? null,
+      resumeFileData: (resume as any).fileData ?? null,
+      resumeFileMime: (resume as any).fileMime ?? null,
       matchScore: score.matchScore,
       matchedSkills: score.matchedSkills,
       rejectionReason: score.rejectionReason,
@@ -216,7 +220,11 @@ router.post("/resumes/parse", upload.array("files", 20), async (req, res): Promi
     for (const file of files) {
       try {
         const parsed = await parseFileBuffer(file.buffer, file.originalname, file.mimetype);
-        results.push(parsed);
+        results.push({
+          ...parsed,
+          fileData: file.buffer.toString("base64"),
+          fileMime: file.mimetype,
+        });
       } catch (err) {
         results.push({
           text: "",
@@ -224,6 +232,8 @@ router.post("/resumes/parse", upload.array("files", 20), async (req, res): Promi
           email: "",
           phone: "",
           fileName: file.originalname,
+          fileData: file.buffer.toString("base64"),
+          fileMime: file.mimetype,
           error: "Failed to parse file",
         });
       }
@@ -270,13 +280,24 @@ router.get("/candidates/:id/resume/download", async (req, res): Promise<void> =>
     return;
   }
 
-  if (!candidate.resumeText) {
-    res.status(404).json({ error: "No resume text available" });
+  if (candidate.resumeFileData && candidate.resumeFileName) {
+    const buffer = Buffer.from(candidate.resumeFileData, "base64");
+    const mime = candidate.resumeFileMime || "application/octet-stream";
+    res.setHeader("Content-Type", mime);
+    res.setHeader("Content-Disposition", `attachment; filename="${candidate.resumeFileName}"`);
+    res.setHeader("Content-Length", buffer.length.toString());
+    res.send(buffer);
     return;
   }
 
+  if (!candidate.resumeText) {
+    res.status(404).json({ error: "No resume available" });
+    return;
+  }
+
+  const safeName = candidate.name.replace(/[^a-zA-Z0-9]/g, "_");
   res.setHeader("Content-Type", "text/plain");
-  res.setHeader("Content-Disposition", `attachment; filename="${candidate.name.replace(/[^a-zA-Z0-9]/g, '_')}_resume.txt"`);
+  res.setHeader("Content-Disposition", `attachment; filename="${safeName}_resume.txt"`);
   res.send(candidate.resumeText);
 });
 

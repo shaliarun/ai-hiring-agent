@@ -13,4 +13,8 @@ export interface ResumeInput {
   phone?: string | null;
   resumeText: string;
   fileName: string;
+  /** @nullable */
+  fileData?: string | null;
+  /** @nullable */
+  fileMime?: string | null;
 }

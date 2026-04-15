@@ -614,6 +614,10 @@ components:
           type: string
         fileName:
           type: string
+        fileData:
+          type: ["string", "null"]
+        fileMime:
+          type: ["string", "null"]
       required:
         - name
         - email
