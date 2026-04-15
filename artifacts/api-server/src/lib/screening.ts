@@ -85,8 +85,8 @@ Respond ONLY with JSON (no markdown):
 
     const matchScore = Math.min(100, Math.max(0, Math.round(parsed.matchScore || 0)));
     const matchedSkills = Array.isArray(parsed.matchedSkills) ? parsed.matchedSkills : [];
-    const shortlisted = matchScore >= 60;
-    const rejectionReason = shortlisted ? null : (parsed.rejectionReason || parsed.reasoning || "Overall match score below shortlisting threshold");
+    const shortlisted = matchScore >= 70;
+    const rejectionReason = shortlisted ? null : (parsed.rejectionReason || parsed.reasoning || "Overall match score below 70% shortlisting threshold");
 
     return { matchScore, matchedSkills, rejectionReason, shortlisted };
   } catch (error: any) {
@@ -162,7 +162,7 @@ function fallbackScoring(candidate: Partial<Candidate>, job: Job): ScreeningScor
     ? Math.round((matchedSkills.length / requiredSkills.length) * 100)
     : 50;
 
-  const shortlisted = matchScore >= 60;
+  const shortlisted = matchScore >= 70;
   const rejectionReason = shortlisted ? null : "Insufficient skill match for this position";
 
   return { matchScore, matchedSkills, rejectionReason, shortlisted };
