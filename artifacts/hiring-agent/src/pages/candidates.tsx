@@ -4,19 +4,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/status-badge";
 import { ScoreProgress } from "@/components/score-progress";
-import { Search, Download, Filter, Trash2 } from "lucide-react";
+import { Search, Download, Trash2, Mail, FileDown } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { EmailComposeDialog } from "@/components/email-compose-dialog";
 
 export default function CandidatesList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobFilter, setJobFilter] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailRecipients, setEmailRecipients] = useState<Array<{ id: number; name: string; email: string; jobTitle?: string; department?: string }>>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const deleteCandidate = useDeleteCandidate();
@@ -32,6 +37,66 @@ export default function CandidatesList() {
     return c.name.toLowerCase().includes(search.toLowerCase()) || 
            c.email.toLowerCase().includes(search.toLowerCase());
   }).sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+
+  const allSelected = filteredCandidates && filteredCandidates.length > 0 && filteredCandidates.every(c => selectedIds.has(c.id));
+
+  const toggleSelectAll = () => {
+    if (!filteredCandidates) return;
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredCandidates.map(c => c.id)));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const openEmailForSelected = () => {
+    if (!filteredCandidates) return;
+    const selected = filteredCandidates.filter(c => selectedIds.has(c.id));
+    const recipients = selected.map(c => {
+      const job = jobs?.find(j => j.id === c.jobId);
+      return { id: c.id, name: c.name, email: c.email, jobTitle: job?.title, department: job?.department };
+    });
+    setEmailRecipients(recipients);
+    setEmailDialogOpen(true);
+  };
+
+  const openEmailForOne = (candidate: typeof filteredCandidates extends (infer T)[] | undefined ? T : never) => {
+    const job = jobs?.find(j => j.id === candidate.jobId);
+    setEmailRecipients([{ id: candidate.id, name: candidate.name, email: candidate.email, jobTitle: job?.title, department: job?.department }]);
+    setEmailDialogOpen(true);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} selected candidate(s)? This cannot be undone.`)) return;
+    const ids = Array.from(selectedIds);
+    let completed = 0;
+    for (const id of ids) {
+      deleteCandidate.mutate({ id }, {
+        onSuccess: () => {
+          completed++;
+          if (completed === ids.length) {
+            toast({ title: `${ids.length} candidate(s) deleted` });
+            queryClient.invalidateQueries({ queryKey: getListCandidatesQueryKey({}) });
+            setSelectedIds(new Set());
+          }
+        },
+      });
+    }
+  };
+
+  const downloadResume = (candidateId: number, candidateName: string) => {
+    window.open(`/api/candidates/${candidateId}/resume/download`, "_blank");
+  };
 
   const exportXlsx = async () => {
     if (!filteredCandidates) return;
@@ -64,6 +129,25 @@ export default function CandidatesList() {
           Export XLSX
         </Button>
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-primary/5 border border-primary/20 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300">
+          <span className="text-sm font-medium">{selectedIds.size} selected</span>
+          <div className="flex gap-2 ml-auto">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={openEmailForSelected}>
+              <Mail className="h-3.5 w-3.5" />
+              Email Selected
+            </Button>
+            <Button size="sm" variant="destructive" className="gap-1.5" onClick={handleBulkDelete}>
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete Selected
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-2 rounded-lg border shadow-sm">
         <div className="relative flex-1 w-full">
@@ -115,23 +199,36 @@ export default function CandidatesList() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[250px]">Candidate</TableHead>
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="w-[220px]">Candidate</TableHead>
                     <TableHead>Job</TableHead>
                     <TableHead className="w-[200px]">Match Score</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Applied</TableHead>
-                    <TableHead className="w-[60px]"></TableHead>
+                    <TableHead className="w-[120px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCandidates.map(candidate => {
                     const job = jobs?.find(j => j.id === candidate.jobId);
+                    const isSelected = selectedIds.has(candidate.id);
                     return (
                       <TableRow 
                         key={candidate.id} 
-                        className="hover:bg-muted/50 cursor-pointer transition-colors group" 
+                        className={`hover:bg-muted/50 cursor-pointer transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
                         onClick={() => window.location.href = `/candidates/${candidate.id}`}
                       >
+                        <TableCell onClick={e => e.stopPropagation()}>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(candidate.id)}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="font-medium text-foreground group-hover:text-primary transition-colors">{candidate.name}</div>
                           <div className="text-xs text-muted-foreground">{candidate.email}</div>
@@ -152,27 +249,47 @@ export default function CandidatesList() {
                         <TableCell className="text-sm text-muted-foreground">
                           {format(new Date(candidate.createdAt), "MMM d, yyyy")}
                         </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!confirm(`Delete ${candidate.name}? This cannot be undone.`)) return;
-                              deleteCandidate.mutate({ id: candidate.id }, {
-                                onSuccess: () => {
-                                  toast({ title: "Candidate deleted" });
-                                  queryClient.invalidateQueries({ queryKey: getListCandidatesQueryKey({}) });
-                                },
-                                onError: () => {
-                                  toast({ title: "Failed to delete", variant: "destructive" });
-                                }
-                              });
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <TableCell onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-primary"
+                              title="Download Resume"
+                              onClick={() => downloadResume(candidate.id, candidate.name)}
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-primary"
+                              title="Send Email"
+                              onClick={() => openEmailForOne(candidate)}
+                            >
+                              <Mail className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              title="Delete"
+                              onClick={(e) => {
+                                if (!confirm(`Delete ${candidate.name}? This cannot be undone.`)) return;
+                                deleteCandidate.mutate({ id: candidate.id }, {
+                                  onSuccess: () => {
+                                    toast({ title: "Candidate deleted" });
+                                    queryClient.invalidateQueries({ queryKey: getListCandidatesQueryKey({}) });
+                                  },
+                                  onError: () => {
+                                    toast({ title: "Failed to delete", variant: "destructive" });
+                                  }
+                                });
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -187,6 +304,12 @@ export default function CandidatesList() {
           )}
         </CardContent>
       </Card>
+
+      <EmailComposeDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        recipients={emailRecipients}
+      />
     </div>
   );
 }

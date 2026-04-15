@@ -235,4 +235,49 @@ router.post("/resumes/parse", upload.array("files", 20), async (req, res): Promi
   }
 });
 
+router.post("/emails/send", async (req, res): Promise<void> => {
+  try {
+    const { emails } = req.body;
+    if (!Array.isArray(emails) || emails.length === 0) {
+      res.status(400).json({ error: "No emails provided" });
+      return;
+    }
+
+    for (const email of emails) {
+      await db.insert(activityTable).values({
+        type: "email_sent",
+        description: `Email sent to ${email.name} (${email.to}): ${email.subject}`,
+        jobTitle: email.subject,
+      });
+    }
+
+    res.json({ sent: emails.length, message: `${emails.length} email(s) queued successfully` });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to send emails" });
+  }
+});
+
+router.get("/candidates/:id/resume/download", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid candidate ID" });
+    return;
+  }
+
+  const [candidate] = await db.select().from(candidatesTable).where(eq(candidatesTable.id, id));
+  if (!candidate) {
+    res.status(404).json({ error: "Candidate not found" });
+    return;
+  }
+
+  if (!candidate.resumeText) {
+    res.status(404).json({ error: "No resume text available" });
+    return;
+  }
+
+  res.setHeader("Content-Type", "text/plain");
+  res.setHeader("Content-Disposition", `attachment; filename="${candidate.name.replace(/[^a-zA-Z0-9]/g, '_')}_resume.txt"`);
+  res.send(candidate.resumeText);
+});
+
 export default router;
