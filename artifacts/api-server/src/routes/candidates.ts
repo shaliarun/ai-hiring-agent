@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
 import multer from "multer";
+import nodemailer from "nodemailer";
 import { db, candidatesTable, jobsTable, activityTable } from "@workspace/db";
 import {
   GetCandidateParams,
@@ -253,16 +254,63 @@ router.post("/emails/send", async (req, res): Promise<void> => {
       return;
     }
 
-    for (const email of emails) {
-      await db.insert(activityTable).values({
-        type: "email_sent",
-        description: `Email sent to ${email.name} (${email.to}): ${email.subject}`,
-        jobTitle: email.subject,
-      });
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+
+    if (!gmailUser || !gmailAppPassword) {
+      res.status(500).json({ error: "Email service not configured. Please set GMAIL_USER and GMAIL_APP_PASSWORD environment variables." });
+      return;
     }
 
-    res.json({ sent: emails.length, message: `${emails.length} email(s) queued successfully` });
-  } catch (err) {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: gmailUser,
+        pass: gmailAppPassword,
+      },
+    });
+
+    const results: { to: string; success: boolean; error?: string }[] = [];
+
+    for (const email of emails) {
+      try {
+        await transporter.sendMail({
+          from: `"Hiring Team" <${gmailUser}>`,
+          to: email.to,
+          subject: email.subject,
+          text: email.body,
+          html: email.body.replace(/\n/g, "<br>"),
+        });
+
+        await db.insert(activityTable).values({
+          type: "email_sent",
+          description: `Email sent to ${email.name} (${email.to}): ${email.subject}`,
+          jobTitle: email.subject,
+        });
+
+        results.push({ to: email.to, success: true });
+      } catch (sendErr: any) {
+        process.stderr.write(`Failed to send email to ${email.to}: ${sendErr?.message}\n`);
+        results.push({ to: email.to, success: false, error: sendErr?.message });
+      }
+    }
+
+    const successCount = results.filter((r) => r.success).length;
+    const failCount = results.filter((r) => !r.success).length;
+
+    if (failCount > 0 && successCount === 0) {
+      res.status(500).json({ error: "All emails failed to send", results });
+      return;
+    }
+
+    res.json({
+      sent: successCount,
+      failed: failCount,
+      message: `${successCount} email(s) sent successfully${failCount > 0 ? `, ${failCount} failed` : ""}`,
+      results,
+    });
+  } catch (err: any) {
+    process.stderr.write(`Email sending error: ${err?.message}\n`);
     res.status(500).json({ error: "Failed to send emails" });
   }
 });
