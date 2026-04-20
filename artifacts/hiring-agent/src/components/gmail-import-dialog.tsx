@@ -60,28 +60,6 @@ export function GmailImportDialog({
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const baseUrl = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
 
-  const checkStatus = useCallback(async () => {
-    setStep("checking");
-    try {
-      const res = await fetch(`${baseUrl}/api/gmail/auth-status`);
-      const data = await res.json();
-      if (!data.configured) {
-        setStep("not-configured");
-      } else if (!data.connected) {
-        const urlRes = await fetch(`${baseUrl}/api/gmail/auth-url`);
-        const urlData = await urlRes.json();
-        setAuthUrl(urlData.url || "");
-        setStep("not-connected");
-      } else {
-        setStep("importing");
-        runImport();
-      }
-    } catch {
-      setErrorMessage("Failed to check Gmail connection status.");
-      setStep("error");
-    }
-  }, [baseUrl]);
-
   const runImport = useCallback(async () => {
     setStep("importing");
     try {
@@ -113,6 +91,27 @@ export function GmailImportDialog({
     }
   }, [baseUrl, jobId]);
 
+  const checkStatus = useCallback(async () => {
+    setStep("checking");
+    try {
+      const res = await fetch(`${baseUrl}/api/gmail/auth-status`);
+      const data = await res.json();
+      if (!data.configured) {
+        setStep("not-configured");
+      } else if (!data.connected) {
+        const urlRes = await fetch(`${baseUrl}/api/gmail/auth-url`);
+        const urlData = await urlRes.json();
+        setAuthUrl(urlData.url || "");
+        setStep("not-connected");
+      } else {
+        runImport();
+      }
+    } catch {
+      setErrorMessage("Failed to check Gmail connection status.");
+      setStep("error");
+    }
+  }, [baseUrl, runImport]);
+
   useEffect(() => {
     if (open) {
       setResults([]);
@@ -120,7 +119,7 @@ export function GmailImportDialog({
       setErrorMessage("");
       checkStatus();
     }
-  }, [open]);
+  }, [open, checkStatus]);
 
   const handleConnect = () => {
     if (authUrl) {
