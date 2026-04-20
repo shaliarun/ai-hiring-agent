@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UploadCloud, Trash2, Loader2, FileUp, FileText, CheckCircle2 } from "lucide-react";
+import { UploadCloud, Trash2, Loader2, FileUp, FileText, CheckCircle2, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { GmailImportDialog } from "@/components/gmail-import-dialog";
 
 interface ResumeEntry {
   name: string;
@@ -35,6 +36,34 @@ export default function HRPortal() {
   const [jobId, setJobId] = useState<string>("");
   const [resumes, setResumes] = useState<ResumeEntry[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [gmailDialogOpen, setGmailDialogOpen] = useState(false);
+
+  const selectedJob = jobs?.find(j => j.id.toString() === jobId);
+
+  const handleGmailImport = useCallback((imported: Array<{
+    name: string;
+    email: string;
+    phone: string;
+    resumeText: string;
+    fileName: string;
+    fileData: string;
+    fileMime: string;
+    emailSubject: string;
+    emailFrom: string;
+  }>) => {
+    const entries: ResumeEntry[] = imported.map(r => ({
+      name: r.name,
+      email: r.email,
+      phone: r.phone,
+      resumeText: r.resumeText,
+      fileName: r.fileName,
+      fileData: r.fileData,
+      fileMime: r.fileMime,
+      parsing: false,
+      parsed: true,
+    }));
+    setResumes(prev => [...prev, ...entries]);
+  }, []);
 
   const parseFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -218,16 +247,32 @@ export default function HRPortal() {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label>Target Job Posting *</Label>
-            <Select value={jobId} onValueChange={setJobId}>
-              <SelectTrigger className="w-full md:w-[400px]">
-                <SelectValue placeholder={loadingJobs ? "Loading jobs..." : "Select a job..."} />
-              </SelectTrigger>
-              <SelectContent>
-                {jobs?.filter(j => j.status === 'open').map(job => (
-                  <SelectItem key={job.id} value={job.id.toString()}>{job.title}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <Select value={jobId} onValueChange={setJobId}>
+                <SelectTrigger className="w-full md:w-[400px]">
+                  <SelectValue placeholder={loadingJobs ? "Loading jobs..." : "Select a job..."} />
+                </SelectTrigger>
+                <SelectContent>
+                  {jobs?.filter(j => j.status === 'open').map(job => (
+                    <SelectItem key={job.id} value={job.id.toString()}>{job.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2 whitespace-nowrap"
+                disabled={!jobId}
+                onClick={() => setGmailDialogOpen(true)}
+                title={!jobId ? "Select a job first" : "Import resumes from Gmail"}
+              >
+                <Mail className="h-4 w-4" />
+                Import from Gmail
+              </Button>
+            </div>
+            {!jobId && (
+              <p className="text-xs text-muted-foreground">Select a job posting to enable Gmail import</p>
+            )}
           </div>
 
           <div
@@ -384,6 +429,14 @@ export default function HRPortal() {
           </div>
         </form>
       )}
+
+      <GmailImportDialog
+        open={gmailDialogOpen}
+        onOpenChange={setGmailDialogOpen}
+        jobId={jobId}
+        jobTitle={selectedJob?.title || ""}
+        onImport={handleGmailImport}
+      />
     </div>
   );
 }
