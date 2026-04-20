@@ -88,6 +88,9 @@ export default function JobDetail() {
         <div className="flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded border">Job #{job.id}</span>
+              </div>
               <h1 className="text-3xl font-bold tracking-tight">{job.title}</h1>
               <div className="flex items-center gap-3 mt-2">
                 <StatusBadge status={job.status} />

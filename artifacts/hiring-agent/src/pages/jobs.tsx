@@ -134,6 +134,7 @@ export default function JobsList() {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1.5 flex-1">
                       <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">#{job.id}</span>
                         <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{job.title}</h3>
                         <StatusBadge status={job.status} />
                       </div>
