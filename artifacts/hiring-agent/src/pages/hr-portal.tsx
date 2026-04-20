@@ -255,7 +255,7 @@ export default function HRPortal() {
                 <SelectContent>
                   {jobs?.filter(j => j.status === 'open').map(job => (
                     <SelectItem key={job.id} value={job.id.toString()}>
-                      <span className="text-muted-foreground font-mono text-xs mr-1.5">#{job.id}</span>{job.title}
+                      <span className="text-muted-foreground font-mono text-xs mr-1.5">Job ID: {String(job.id).padStart(2, '0')}</span>{job.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
