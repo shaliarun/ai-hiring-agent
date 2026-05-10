@@ -30,8 +30,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <h1 className="text-xl font-bold font-sans tracking-tight text-sidebar-primary-foreground">
             Hiring<span className="text-sidebar-primary">Agent</span>
           </h1>
-          <div className="mt-2 text-xs font-mono text-sidebar-foreground/60 uppercase tracking-wider">
-            {role || "Select Role"}
+          <div className="mt-1 text-xs text-sidebar-foreground/60 uppercase tracking-wider font-medium">
+            {role || ""}
           </div>
         </div>
 

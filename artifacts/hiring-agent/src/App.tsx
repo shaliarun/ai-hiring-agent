@@ -19,7 +19,18 @@ import NotFound from "@/pages/not-found";
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const { role } = useAuth();
+  const { role, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!role) {
     return <Login />;

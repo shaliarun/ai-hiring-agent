@@ -1,64 +1,110 @@
-import { useAuth, Role } from "@/lib/auth";
+import { useState } from "react";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, UploadCloud, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Lock, Mail } from "lucide-react";
 
 export default function Login() {
-  const { setRole } = useAuth();
+  const { login } = useAuth();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const roles = [
-    {
-      id: "HR" as Role,
-      title: "HR Team",
-      description: "Upload resumes and manage the initial hiring pipeline.",
-      icon: UploadCloud,
-    },
-    {
-      id: "Manager" as Role,
-      title: "Department Manager",
-      description: "Create jobs, define requirements, and view pipeline stats.",
-      icon: Briefcase,
-    },
-    {
-      id: "Hiring Manager" as Role,
-      title: "Hiring Manager",
-      description: "Review AI screened candidates, update status, and add notes.",
-      icon: Users,
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username.trim() || !password) {
+      setError("Please enter your email and password.");
+      return;
     }
-  ];
+    setLoading(true);
+    setError("");
+    const result = await login(username.trim(), password);
+    if (!result.success) {
+      setError(result.error || "Invalid credentials.");
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-muted/40 via-background to-muted/20 flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Select Your Role</h1>
-          <p className="text-muted-foreground text-lg">
-            Choose your persona to access the AI Hiring Agent command center.
-          </p>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-2">
+            <Lock className="h-7 w-7 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Hiring<span className="text-primary">Agent</span>
+          </h1>
+          <p className="text-muted-foreground">Sign in to access the HR platform</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {roles.map((role) => (
-            <Card 
-              key={role.id} 
-              className="cursor-pointer hover:border-primary/50 transition-colors hover:shadow-md"
-              onClick={() => setRole(role.id)}
-            >
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4 text-primary">
-                  <role.icon size={32} />
+        <Card className="shadow-lg border-muted/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl">Welcome back</CardTitle>
+            <CardDescription>
+              Enter your credentials to continue
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-1.5">
+                <Label htmlFor="username">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="you@company.com"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="pl-9"
+                    autoComplete="username"
+                    disabled={loading}
+                  />
                 </div>
-                <CardTitle>{role.title}</CardTitle>
-                <CardDescription>{role.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline">
-                  Enter as {role.title}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-9"
+                    autoComplete="current-password"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full mt-2" size="lg" disabled={loading}>
+                {loading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...</>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Access restricted to authorized HR personnel only
+        </p>
       </div>
     </div>
   );

@@ -4,9 +4,11 @@ import jobsRouter from "./jobs";
 import candidatesRouter from "./candidates";
 import dashboardRouter from "./dashboard";
 import gmailImportRouter from "./gmail-import";
+import authRouter from "./auth";
 
 const router: IRouter = Router();
 
+router.use(authRouter);
 router.use(healthRouter);
 router.use(jobsRouter);
 router.use(candidatesRouter);
