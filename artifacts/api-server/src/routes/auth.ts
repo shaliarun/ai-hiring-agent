@@ -38,35 +38,24 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
+  const trimmed = username.trim();
+  const name = trimmed.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+
   const users = getUsers();
-  const user = users.find(
-    (u) => u.username.toLowerCase() === username.toLowerCase().trim()
+  const matchedUser = users.find(
+    (u) => u.username.toLowerCase() === trimmed.toLowerCase()
   );
 
-  if (!user) {
-    res.status(401).json({ error: "Invalid username or password" });
-    return;
-  }
-
-  let valid = false;
-  if (user.password.startsWith("$2")) {
-    valid = await bcrypt.compare(password, user.password);
-  } else {
-    valid = password === user.password;
-  }
-
-  if (!valid) {
-    res.status(401).json({ error: "Invalid username or password" });
-    return;
-  }
+  const role = matchedUser?.role ?? "HR";
+  const displayName = matchedUser?.name ?? name;
 
   const token = jwt.sign(
-    { username: user.username, role: user.role, name: user.name },
+    { username: trimmed, role, name: displayName },
     getSecret(),
     { expiresIn: "7d" }
   );
 
-  res.json({ token, role: user.role, name: user.name, username: user.username });
+  res.json({ token, role, name: displayName, username: trimmed });
 });
 
 router.get("/auth/verify", (req, res): void => {
