@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "M2dK_YeMJAG0bOyPEwf2L"
+uri = "file://README.md"
+type = "text"
+title = "README.md — Setup & Configuration Guide"
