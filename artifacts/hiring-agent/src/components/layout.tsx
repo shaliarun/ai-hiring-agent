@@ -8,6 +8,7 @@ import {
   LogOut 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppLogo } from "@/components/brand-logo";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -26,11 +27,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen bg-muted/30">
       {/* Sidebar */}
       <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
-        <div className="p-6 border-b border-sidebar-border">
-          <h1 className="text-xl font-bold font-sans tracking-tight text-sidebar-primary-foreground">
-            Hiring<span className="text-sidebar-primary">Agent</span>
-          </h1>
-          <div className="mt-1 text-xs text-sidebar-foreground/60 uppercase tracking-wider font-medium">
+        <div className="p-5 border-b border-sidebar-border">
+          <AppLogo size="sm" inverted />
+          <div className="mt-2 text-xs text-sidebar-foreground/60 uppercase tracking-wider font-medium">
             {role || ""}
           </div>
         </div>

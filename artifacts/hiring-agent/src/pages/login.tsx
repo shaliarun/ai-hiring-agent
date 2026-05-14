@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Lock, Mail } from "lucide-react";
+import { AppLogo } from "@/components/brand-logo";
 
 export default function Login() {
   const { login } = useAuth();
@@ -32,13 +33,10 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/40 via-background to-muted/20 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-2">
-            <Lock className="h-7 w-7 text-primary" />
+        <div className="text-center space-y-3">
+          <div className="flex justify-center mb-1">
+            <AppLogo size="lg" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Hiring<span className="text-primary">Agent</span>
-          </h1>
           <p className="text-muted-foreground">Sign in to access the HR platform</p>
         </div>
 
