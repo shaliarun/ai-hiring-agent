@@ -170,19 +170,16 @@ export default function JobsList() {
                 </Link>
                 <div className="flex items-center justify-end gap-2 px-6 py-3 border-t mt-4">
                   {job.status === "closed" ? (
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => handleReopenPosition(e, job.id)}>
+                    <Button variant="outline" size="icon" className="h-7 w-7" title="Reopen Position" onClick={(e) => handleReopenPosition(e, job.id)}>
                       <RefreshCcw className="h-3.5 w-3.5" />
-                      Reopen Position
                     </Button>
                   ) : (
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => handleClosePosition(e, job.id)}>
+                    <Button variant="outline" size="icon" className="h-7 w-7" title="Close Position" onClick={(e) => handleClosePosition(e, job.id)}>
                       <XCircle className="h-3.5 w-3.5" />
-                      Close Position
                     </Button>
                   )}
-                  <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={(e) => handleDelete(e, job.id)}>
+                  <Button variant="destructive" size="icon" className="h-7 w-7" title="Delete Job" onClick={(e) => handleDelete(e, job.id)}>
                     <Trash2 className="h-3.5 w-3.5" />
-                    Delete
                   </Button>
                 </div>
               </CardContent>

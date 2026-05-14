@@ -110,32 +110,32 @@ export default function JobDetail() {
               {job.status === "closed" ? (
                 <Button
                   variant="outline"
+                  size="icon"
                   onClick={handleReopenPosition}
                   disabled={updateJob.isPending}
-                  className="gap-2"
+                  title="Reopen Position"
                 >
                   {updateJob.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
-                  Reopen Position
                 </Button>
               ) : (
                 <Button
                   variant="outline"
+                  size="icon"
                   onClick={handleClosePosition}
                   disabled={updateJob.isPending}
-                  className="gap-2"
+                  title="Close Position"
                 >
                   {updateJob.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                  Close Position
                 </Button>
               )}
               <Button
                 variant="destructive"
+                size="icon"
                 onClick={handleDelete}
                 disabled={deleteJob.isPending}
-                className="gap-2"
+                title="Delete Job"
               >
                 {deleteJob.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                Delete
               </Button>
             </div>
           </div>

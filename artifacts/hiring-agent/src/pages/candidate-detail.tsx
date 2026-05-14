@@ -128,13 +128,12 @@ export default function CandidateDetail() {
             </div>
             <Button
               variant="destructive"
-              size="sm"
+              size="icon"
               onClick={handleDelete}
               disabled={deleteCandidate.isPending}
-              className="gap-1.5"
+              title="Delete Candidate"
             >
-              {deleteCandidate.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-              Delete
+              {deleteCandidate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
             </Button>
           </div>
         </div>

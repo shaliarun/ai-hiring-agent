@@ -138,9 +138,8 @@ export default function CandidatesList() {
               <Mail className="h-3.5 w-3.5" />
               Email Selected
             </Button>
-            <Button size="sm" variant="destructive" className="gap-1.5" onClick={handleBulkDelete}>
+            <Button size="icon" variant="destructive" className="h-8 w-8" title="Delete Selected" onClick={handleBulkDelete}>
               <Trash2 className="h-3.5 w-3.5" />
-              Delete Selected
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
               Clear
