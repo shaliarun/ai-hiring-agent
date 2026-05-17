@@ -37,7 +37,7 @@ export default function Login() {
           <div className="flex justify-center mb-1">
             <div
               className="inline-flex items-center px-4 py-2.5 rounded-xl"
-              style={{ background: "#1A1333" }}
+              style={{ background: "#0D0B2E" }}
             >
               <AppLogo size="lg" />
             </div>
