@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useUploadResumes, useListJobs, getListJobsQueryKey } from "@workspace/api-client-react";
+import { getApiBase } from "@/lib/api-url";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,8 +87,8 @@ export default function HRPortal() {
     fileArray.forEach(f => formData.append("files", f));
 
     try {
-      const baseUrl = import.meta.env.BASE_URL || "/";
-      const resp = await fetch(`${baseUrl}api/resumes/parse`, {
+      const baseUrl = getApiBase();
+      const resp = await fetch(`${baseUrl}/api/resumes/parse`, {
         method: "POST",
         body: formData,
       });
@@ -375,8 +376,8 @@ export default function HRPortal() {
                             const formData = new FormData();
                             formData.append("files", file);
                             try {
-                              const baseUrl = import.meta.env.BASE_URL || "/";
-                              const resp = await fetch(`${baseUrl}api/resumes/parse`, {
+                              const baseUrl = getApiBase();
+                              const resp = await fetch(`${baseUrl}/api/resumes/parse`, {
                                 method: "POST",
                                 body: formData,
                               });

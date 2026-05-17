@@ -21,6 +21,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getApiBase } from "@/lib/api-url";
 
 interface ParsedResume {
   name: string;
@@ -58,7 +59,7 @@ export function GmailImportDialog({
   const [resultMessage, setResultMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const baseUrl = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+  const baseUrl = getApiBase();
 
   const runImport = useCallback(async () => {
     setStep("importing");

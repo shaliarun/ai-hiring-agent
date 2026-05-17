@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { getApiBase } from "@/lib/api-url";
 
 export type Role = "HR" | "Manager" | "Hiring Manager" | null;
 
@@ -20,7 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = "hiring-agent-user";
-const BASE = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+const BASE = getApiBase();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);

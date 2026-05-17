@@ -1,0 +1,9 @@
+{
+  "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @workspace/hiring-agent run build",
+  "outputDirectory": "artifacts/hiring-agent/dist/public",
+  "framework": null,
+  "env": {
+    "BASE_PATH": "/",
+    "PORT": "3000"
+  }
+}

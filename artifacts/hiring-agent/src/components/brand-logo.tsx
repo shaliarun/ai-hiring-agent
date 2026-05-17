@@ -1,5 +1,6 @@
 interface LogoProps {
   size?: "sm" | "md" | "lg";
+  inverted?: boolean;
 }
 
 function InsightlyIcon({ size }: { size: number }) {

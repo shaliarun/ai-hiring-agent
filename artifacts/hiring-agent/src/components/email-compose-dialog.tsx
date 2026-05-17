@@ -21,6 +21,7 @@ import {
 import { EMAIL_TEMPLATES, fillTemplate } from "@/lib/email-templates";
 import { Send, X, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getApiBase } from "@/lib/api-url";
 
 interface Recipient {
   id: number;
@@ -96,7 +97,7 @@ export function EmailComposeDialog({
         };
       });
 
-      const res = await fetch("/api/emails/send", {
+      const res = await fetch(`${getApiBase()}/api/emails/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emails }),
