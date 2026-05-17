@@ -35,7 +35,12 @@ export default function Login() {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-3">
           <div className="flex justify-center mb-1">
-            <AppLogo size="lg" />
+            <div
+              className="inline-flex items-center px-4 py-2.5 rounded-xl"
+              style={{ background: "#1A1333" }}
+            >
+              <AppLogo size="lg" />
+            </div>
           </div>
           <p className="text-muted-foreground">Sign in to access the HR platform</p>
         </div>
