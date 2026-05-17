@@ -33,8 +33,8 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#0D0B2E" }}>
       <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-3">
-          <div className="flex justify-center mb-1">
+        <div className="space-y-3">
+          <div className="mb-1">
             <AppLogo size="lg" />
           </div>
           <p className="text-white/50">Sign in to access the HR platform</p>
