@@ -10,7 +10,7 @@ function InsightlyIcon({ size }: { size: number }) {
       style={{
         width: size,
         height: size,
-        borderRadius: Math.round(size * 0.3),
+        borderRadius: Math.round(size * 0.42),
         background: "linear-gradient(135deg, #a78bfa 0%, #6366f1 50%, #9333ea 100%)",
         boxShadow: "0 4px 14px 0 rgba(99,102,241,0.45)",
         display: "flex",
