@@ -31,16 +31,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-muted/40 via-background to-muted/20 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#0D0B2E" }}>
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-3">
           <div className="flex justify-center mb-1">
-            <div
-              className="inline-flex items-center px-4 py-2.5 rounded-xl"
-              style={{ background: "#0D0B2E" }}
-            >
-              <AppLogo size="lg" />
-            </div>
+            <AppLogo size="lg" />
           </div>
           <p className="text-muted-foreground">Sign in to access the HR platform</p>
         </div>
