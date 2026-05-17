@@ -41,25 +41,13 @@ function InsightlyIcon({ size }: { size: number }) {
 
 export function AppLogo({ size = "md" }: LogoProps) {
   const iconSize = size === "sm" ? 34 : size === "lg" ? 50 : 42;
-  const titleCls = size === "sm" ? "text-[15px]" : size === "lg" ? "text-2xl" : "text-xl";
-  const subtitleCls = size === "sm" ? "text-[9px]" : size === "lg" ? "text-[13px]" : "text-[11px]";
 
   return (
     <div className="flex items-center gap-2.5">
       <InsightlyIcon size={iconSize} />
-      <div className="flex flex-col leading-tight">
-        <span
-          className={`font-bold tracking-tight text-white ${titleCls}`}
-          style={{ textShadow: "none" }}
-        >
-          Insightly
-        </span>
-        <span
-          className={`font-semibold uppercase tracking-widest ${subtitleCls}`}
-          style={{ color: "#A78BFA", letterSpacing: "0.12em" }}
-        >
-          Hiring Agent
-        </span>
+      <div className="leading-tight">
+        <div className="text-base font-semibold tracking-tight text-white">Insightly</div>
+        <div className="text-[10px] uppercase tracking-widest text-indigo-300/70">Hiring Agent</div>
       </div>
     </div>
   );
