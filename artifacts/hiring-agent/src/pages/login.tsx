@@ -31,15 +31,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#0D0B2E" }}>
-      <div className="w-full max-w-md space-y-6">
-        <div className="space-y-3">
-          <div className="mb-1">
-            <AppLogo size="lg" />
-          </div>
-          <p className="text-white/50">Sign in to access the HR platform</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ background: "#0D0B2E" }}>
+      {/* Logo pinned top-left */}
+      <div className="absolute top-6 left-6">
+        <AppLogo size="md" />
+      </div>
 
+      <div className="w-full max-w-md space-y-6">
         <Card className="shadow-lg border-muted/50">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl">Welcome back</CardTitle>
