@@ -37,7 +37,7 @@ export default function Login() {
           <div className="flex justify-center mb-1">
             <AppLogo size="lg" />
           </div>
-          <p className="text-muted-foreground">Sign in to access the HR platform</p>
+          <p className="text-white/50">Sign in to access the HR platform</p>
         </div>
 
         <Card className="shadow-lg border-muted/50">
@@ -100,7 +100,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="text-center text-xs text-white/30">
           Access restricted to authorized HR personnel only
         </p>
       </div>
