@@ -223,7 +223,7 @@ export default function CreateJob() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Salary Range (USD)</Label>
+                <Label>Salary Range</Label>
                 <div className="flex items-center gap-2">
                   <Input type="number" min="0" step="1000" value={salaryMin} onChange={e => setSalaryMin(e.target.value)} placeholder="Min" />
                   <span className="text-muted-foreground">to</span>
