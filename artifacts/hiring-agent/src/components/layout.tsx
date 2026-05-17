@@ -29,9 +29,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
         <div className="p-5 border-b border-sidebar-border">
           <AppLogo size="sm" inverted />
-          <div className="mt-2 text-xs text-sidebar-foreground/60 uppercase tracking-wider font-medium">
-            {role || ""}
-          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
