@@ -34,6 +34,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
+      if (allowedOrigins.length === 0) return callback(null, true);
       if (
         origin.startsWith("http://localhost") ||
         origin.startsWith("http://127.0.0.1")
