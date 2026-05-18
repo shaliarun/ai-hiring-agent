@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { getApiBase } from "@/lib/api-url";
 
 export type Role = "HR" | "Manager" | "Hiring Manager" | null;
 
@@ -21,7 +20,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = "hiring-agent-user";
-const BASE = getApiBase();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -32,53 +30,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (stored) {
       try {
         const parsed: AuthUser = JSON.parse(stored);
-        fetch(`${BASE}/api/auth/verify`, {
-          headers: { Authorization: `Bearer ${parsed.token}` },
-        })
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.valid) {
-              setUser(parsed);
-            } else {
-              localStorage.removeItem(STORAGE_KEY);
-            }
-          })
-          .catch(() => {
-            setUser(parsed);
-          })
-          .finally(() => setIsLoading(false));
+        setUser(parsed);
       } catch {
         localStorage.removeItem(STORAGE_KEY);
-        setIsLoading(false);
       }
-    } else {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const res = await fetch(`${BASE}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || "Login failed" };
-      }
-      const authUser: AuthUser = {
-        token: data.token,
-        role: data.role,
-        name: data.name,
-        username: data.username,
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
-      setUser(authUser);
-      return { success: true };
-    } catch {
-      return { success: false, error: "Network error. Please try again." };
-    }
+    const trimmed = username.trim();
+    const name = trimmed.includes("@")
+      ? trimmed.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      : "HR Admin";
+    const authUser: AuthUser = {
+      token: `dummy-${Date.now()}`,
+      role: "HR",
+      name,
+      username: trimmed,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
+    setUser(authUser);
+    return { success: true };
   };
 
   const logout = () => {

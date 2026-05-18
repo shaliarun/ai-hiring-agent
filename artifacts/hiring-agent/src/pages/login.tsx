@@ -42,7 +42,7 @@ export default function Login() {
           <CardHeader className="pb-4">
             <CardTitle className="text-xl">Welcome back</CardTitle>
             <CardDescription>
-              Enter your credentials to continue
+              Enter any demo details to continue
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -99,7 +99,7 @@ export default function Login() {
         </Card>
 
         <p className="text-center text-xs text-white/30">
-          Access restricted to authorized HR personnel only
+          Demo access enabled
         </p>
       </div>
     </div>
