@@ -5,5 +5,13 @@
   "env": {
     "BASE_PATH": "/",
     "PORT": "3000"
-  }
+  },
+  "functions": {
+    "api/[[...path]].ts": {
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
 }
