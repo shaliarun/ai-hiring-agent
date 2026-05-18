@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from "react";
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -47,6 +47,7 @@ class AppErrorBoundary extends Component<
 
 function AppContent() {
   const { role, isLoading } = useAuth();
+  const [location] = useLocation();
 
   if (isLoading) {
     return (
@@ -65,7 +66,7 @@ function AppContent() {
 
   return (
     <Layout>
-      <AppErrorBoundary>
+      <AppErrorBoundary key={location}>
         <Switch>
           <Route path="/" component={Dashboard} />
           <Route path="/jobs" component={JobsList} />

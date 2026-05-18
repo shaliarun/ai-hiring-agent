@@ -19,22 +19,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = "hiring-agent-user";
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed: AuthUser = JSON.parse(stored);
-        setUser(parsed);
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
     setIsLoading(false);
   }, []);
 
@@ -49,13 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name,
       username: trimmed,
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
     setUser(authUser);
     return { success: true };
   };
 
   const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
     setUser(null);
   };
 

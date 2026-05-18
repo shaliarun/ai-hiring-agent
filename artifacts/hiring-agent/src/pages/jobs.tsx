@@ -23,6 +23,8 @@ export default function JobsList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const jobsData = Array.isArray(jobs) ? jobs : [];
+
   const handleClosePosition = (e: React.MouseEvent, jobId: number) => {
     e.preventDefault();
     e.stopPropagation();
@@ -67,7 +69,7 @@ export default function JobsList() {
     });
   };
 
-  const filteredJobs = jobs?.filter(job => {
+  const filteredJobs = jobsData.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) || 
                           job.department.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
@@ -151,7 +153,7 @@ export default function JobsList() {
                           </div>
                         )}
                         <div className="flex items-center gap-1.5 font-mono text-xs bg-muted px-2 py-0.5 rounded">
-                          Added {format(new Date(job.createdAt), "MMM d, yyyy")}
+                          Added {formatSafeDate(job.createdAt)}
                         </div>
                       </div>
                     </div>
@@ -189,4 +191,10 @@ export default function JobsList() {
       )}
     </div>
   );
+}
+
+function formatSafeDate(value: string | Date | null | undefined): string {
+  if (!value) return "recently";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "recently" : format(date, "MMM d, yyyy");
 }

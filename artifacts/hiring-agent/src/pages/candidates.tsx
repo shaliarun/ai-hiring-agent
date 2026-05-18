@@ -33,7 +33,10 @@ export default function CandidatesList() {
 
   const { data: jobs } = useListJobs({ query: { queryKey: getListJobsQueryKey() } });
 
-  const filteredCandidates = candidates?.filter(c => {
+  const candidatesData = Array.isArray(candidates) ? candidates : [];
+  const jobsData = Array.isArray(jobs) ? jobs : [];
+
+  const filteredCandidates = candidatesData.filter(c => {
     return c.name.toLowerCase().includes(search.toLowerCase()) || 
            c.email.toLowerCase().includes(search.toLowerCase());
   }).sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
@@ -62,7 +65,7 @@ export default function CandidatesList() {
     if (!filteredCandidates) return;
     const selected = filteredCandidates.filter(c => selectedIds.has(c.id));
     const recipients = selected.map(c => {
-      const job = jobs?.find(j => j.id === c.jobId);
+      const job = jobsData.find(j => j.id === c.jobId);
       return { id: c.id, name: c.name, email: c.email, jobTitle: job?.title, department: job?.department };
     });
     setEmailRecipients(recipients);
@@ -70,7 +73,7 @@ export default function CandidatesList() {
   };
 
   const openEmailForOne = (candidate: typeof filteredCandidates extends (infer T)[] | undefined ? T : never) => {
-    const job = jobs?.find(j => j.id === candidate.jobId);
+    const job = jobsData.find(j => j.id === candidate.jobId);
     setEmailRecipients([{ id: candidate.id, name: candidate.name, email: candidate.email, jobTitle: job?.title, department: job?.department }]);
     setEmailDialogOpen(true);
   };
@@ -109,7 +112,7 @@ export default function CandidatesList() {
       Status: c.status,
       "Match Score": c.matchScore || "",
       Shortlisted: c.shortlisted ? "Yes" : "No",
-      Applied: format(new Date(c.createdAt), "yyyy-MM-dd"),
+      Applied: formatSafeDate(c.createdAt, "yyyy-MM-dd"),
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
@@ -165,7 +168,7 @@ export default function CandidatesList() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Jobs</SelectItem>
-              {jobs?.map(job => (
+              {jobsData.map(job => (
                 <SelectItem key={job.id} value={job.id.toString()}>
                   <span className="text-muted-foreground font-mono text-xs mr-1.5">Job ID: {String(job.id).padStart(2, '0')}</span>{job.title}
                 </SelectItem>
@@ -216,7 +219,7 @@ export default function CandidatesList() {
                 </TableHeader>
                 <TableBody>
                   {filteredCandidates.map(candidate => {
-                    const job = jobs?.find(j => j.id === candidate.jobId);
+                    const job = jobsData.find(j => j.id === candidate.jobId);
                     const isSelected = selectedIds.has(candidate.id);
                     return (
                       <TableRow 
@@ -248,7 +251,7 @@ export default function CandidatesList() {
                           <StatusBadge status={candidate.status} />
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {format(new Date(candidate.createdAt), "MMM d, yyyy")}
+                          {formatSafeDate(candidate.createdAt, "MMM d, yyyy")}
                         </TableCell>
                         <TableCell onClick={e => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
@@ -313,4 +316,10 @@ export default function CandidatesList() {
       />
     </div>
   );
+}
+
+function formatSafeDate(value: string | Date | null | undefined, pattern: string): string {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : format(date, pattern);
 }

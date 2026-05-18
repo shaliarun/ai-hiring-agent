@@ -39,7 +39,8 @@ export default function HRPortal() {
   const [uploading, setUploading] = useState(false);
   const [gmailDialogOpen, setGmailDialogOpen] = useState(false);
 
-  const selectedJob = jobs?.find(j => j.id.toString() === jobId);
+  const jobsData = Array.isArray(jobs) ? jobs : [];
+  const selectedJob = jobsData.find(j => j.id.toString() === jobId);
 
   const handleGmailImport = useCallback((imported: Array<{
     name: string;
@@ -254,7 +255,7 @@ export default function HRPortal() {
                   <SelectValue placeholder={loadingJobs ? "Loading jobs..." : "Select a job..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  {jobs?.filter(j => j.status === 'open').map(job => (
+                  {jobsData.filter(j => j.status === 'open').map(job => (
                     <SelectItem key={job.id} value={job.id.toString()}>
                       <span className="text-muted-foreground font-mono text-xs mr-1.5">Job ID: {String(job.id).padStart(2, '0')}</span>{job.title}
                     </SelectItem>
