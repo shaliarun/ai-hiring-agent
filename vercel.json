@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @workspace/hiring-agent run build",
+  "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/hiring-agent run build",
   "outputDirectory": "artifacts/hiring-agent/dist/public",
   "framework": null,
   "env": {
@@ -7,7 +7,7 @@
     "PORT": "3000"
   },
   "functions": {
-    "api/[[...path]].ts": {
+    "api/[[...path]].js": {
       "maxDuration": 60
     }
   },
