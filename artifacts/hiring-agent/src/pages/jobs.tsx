@@ -63,8 +63,12 @@ export default function JobsList() {
         toast({ title: "Job Deleted" });
         queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
       },
-      onError: () => {
-        toast({ title: "Failed to delete job", variant: "destructive" });
+      onError: (error) => {
+        toast({
+          title: "Failed to delete job",
+          description: error instanceof Error ? error.message : "Please try again.",
+          variant: "destructive",
+        });
       }
     });
   };

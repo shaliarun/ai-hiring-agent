@@ -140,13 +140,24 @@ router.delete("/jobs/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [job] = await db.delete(jobsTable).where(eq(jobsTable.id, params.data.id)).returning();
-  if (!job) {
-    res.status(404).json({ error: "Job not found" });
-    return;
-  }
+  try {
+    const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, params.data.id));
+    if (!job) {
+      res.status(404).json({ error: "Job not found" });
+      return;
+    }
 
-  res.sendStatus(204);
+    await db.delete(candidatesTable).where(eq(candidatesTable.jobId, params.data.id));
+    await db.delete(activityTable).where(eq(activityTable.jobTitle, job.title));
+    await db.delete(jobsTable).where(eq(jobsTable.id, params.data.id));
+
+    res.sendStatus(204);
+  } catch (error) {
+    logger.error({ error }, "Failed to delete job");
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Failed to delete job",
+    });
+  }
 });
 
 router.get("/jobs/:id/candidates", async (req, res): Promise<void> => {
