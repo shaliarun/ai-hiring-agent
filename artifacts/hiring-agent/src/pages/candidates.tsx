@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/status-badge";
 import { ScoreProgress } from "@/components/score-progress";
 import { Search, Download, Trash2, Mail, FileDown } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EmailComposeDialog } from "@/components/email-compose-dialog";
 
 export default function CandidatesList() {
+  const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobFilter, setJobFilter] = useState("all");
@@ -225,7 +226,7 @@ export default function CandidatesList() {
                       <TableRow 
                         key={candidate.id} 
                         className={`hover:bg-muted/50 cursor-pointer transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
-                        onClick={() => window.location.href = `/candidates/${candidate.id}`}
+                        onClick={() => setLocation(`/candidates/${candidate.id}`)}
                       >
                         <TableCell onClick={e => e.stopPropagation()}>
                           <Checkbox

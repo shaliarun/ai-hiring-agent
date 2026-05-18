@@ -262,7 +262,7 @@ export default function JobDetail() {
                 </TableHeader>
                 <TableBody>
                   {candidates.map(candidate => (
-                    <TableRow key={candidate.id} className="hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => window.location.href = `/candidates/${candidate.id}`}>
+                    <TableRow key={candidate.id} className="hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setLocation(`/candidates/${candidate.id}`)}>
                       <TableCell>
                         <div className="font-medium text-foreground">{candidate.name}</div>
                         <div className="text-xs text-muted-foreground">{candidate.email}</div>
