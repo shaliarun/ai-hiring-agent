@@ -1,3 +1,4 @@
+import { Component, type ReactNode } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -17,6 +18,32 @@ import HRPortal from "@/pages/hr-portal";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
+
+class AppErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-6 text-destructive">
+          <h1 className="text-xl font-semibold">Something went wrong</h1>
+          <p className="mt-2 text-sm">
+            Please refresh the page. If this keeps happening, check the latest deployment logs.
+          </p>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 function AppContent() {
   const { role, isLoading } = useAuth();
@@ -38,17 +65,19 @@ function AppContent() {
 
   return (
     <Layout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/jobs" component={JobsList} />
-        <Route path="/jobs/new" component={CreateJob} />
-        <Route path="/jobs/:id/edit" component={EditJob} />
-        <Route path="/jobs/:id" component={JobDetail} />
-        <Route path="/candidates" component={CandidatesList} />
-        <Route path="/candidates/:id" component={CandidateDetail} />
-        <Route path="/hr" component={HRPortal} />
-        <Route component={NotFound} />
-      </Switch>
+      <AppErrorBoundary>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/jobs" component={JobsList} />
+          <Route path="/jobs/new" component={CreateJob} />
+          <Route path="/jobs/:id/edit" component={EditJob} />
+          <Route path="/jobs/:id" component={JobDetail} />
+          <Route path="/candidates" component={CandidatesList} />
+          <Route path="/candidates/:id" component={CandidateDetail} />
+          <Route path="/hr" component={HRPortal} />
+          <Route component={NotFound} />
+        </Switch>
+      </AppErrorBoundary>
     </Layout>
   );
 }

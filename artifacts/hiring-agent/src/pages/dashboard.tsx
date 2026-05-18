@@ -25,6 +25,9 @@ export default function Dashboard() {
     query: { queryKey: getGetRecentActivityQueryKey() }
   });
 
+  const pipelineData = Array.isArray(pipeline) ? pipeline : [];
+  const activityData = Array.isArray(activity) ? activity : [];
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
@@ -73,10 +76,10 @@ export default function Dashboard() {
           <CardContent className="pl-2">
             {loadingPipeline ? (
               <Skeleton className="h-[300px] w-full" />
-            ) : pipeline && pipeline.length > 0 ? (
+            ) : pipelineData.length > 0 ? (
               <div className="h-[300px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={pipeline} layout="vertical" margin={{ top: 0, right: 0, left: 40, bottom: 0 }}>
+                  <BarChart data={pipelineData} layout="vertical" margin={{ top: 0, right: 0, left: 40, bottom: 0 }}>
                     <XAxis type="number" hide />
                     <YAxis dataKey="label" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                     <Tooltip cursor={{ fill: 'transparent' }} />
@@ -113,9 +116,9 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-            ) : activity && activity.length > 0 ? (
+            ) : activityData.length > 0 ? (
               <div className="space-y-6">
-                {activity.map((item) => (
+                {activityData.map((item) => (
                   <div key={item.id} className="relative pl-6 before:absolute before:left-2 before:top-2 before:bottom-[-24px] before:w-px before:bg-border last:before:hidden">
                     <div className="absolute left-[3px] top-[6px] h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
                     <p className="text-sm font-medium">{item.description}</p>
@@ -124,7 +127,7 @@ export default function Dashboard() {
                       {item.candidateName && item.jobTitle && <span>•</span>}
                       {item.jobTitle && <span className="font-mono bg-muted px-1 rounded">{item.jobTitle}</span>}
                       <span>•</span>
-                      <span>{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</span>
+                      <span>{formatActivityTime(item.createdAt)}</span>
                     </div>
                   </div>
                 ))}
@@ -139,6 +142,15 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+function formatActivityTime(value: string | Date | null | undefined): string {
+  if (!value) return "recently";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "recently";
+
+  return formatDistanceToNow(date, { addSuffix: true });
 }
 
 function StatCard({ title, value, total, icon: Icon, loading }: { title: string, value?: number | string | null, total?: number | null, icon: any, loading: boolean }) {
