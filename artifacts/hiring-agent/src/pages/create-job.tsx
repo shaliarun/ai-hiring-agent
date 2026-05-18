@@ -89,8 +89,12 @@ export default function CreateJob() {
         queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
         setLocation(`/jobs/${newJob.id}`);
       },
-      onError: () => {
-        toast({ title: "Failed to create job", variant: "destructive" });
+      onError: (error) => {
+        toast({
+          title: "Failed to create job",
+          description: error instanceof Error ? error.message : "Please check database settings and try again.",
+          variant: "destructive",
+        });
       }
     });
   };

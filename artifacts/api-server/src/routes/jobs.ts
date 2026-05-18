@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, count, and, sql } from "drizzle-orm";
 import { db, jobsTable, candidatesTable, activityTable } from "@workspace/db";
+import { logger } from "../lib/logger";
 import {
   CreateJobBody,
   UpdateJobBody,
@@ -41,29 +42,36 @@ router.post("/jobs", async (req, res): Promise<void> => {
     return;
   }
 
-  const [job] = await db.insert(jobsTable).values({
-    title: parsed.data.title,
-    department: parsed.data.department,
-    description: parsed.data.description ?? null,
-    requiredSkills: parsed.data.requiredSkills ?? [],
-    niceToHaveSkills: parsed.data.niceToHaveSkills ?? [],
-    keywords: parsed.data.keywords ?? [],
-    experienceMin: parsed.data.experienceMin ?? null,
-    experienceMax: parsed.data.experienceMax ?? null,
-    education: parsed.data.education ?? null,
-    location: parsed.data.location ?? null,
-    salaryMin: parsed.data.salaryMin ?? null,
-    salaryMax: parsed.data.salaryMax ?? null,
-    status: "open",
-  }).returning();
+  try {
+    const [job] = await db.insert(jobsTable).values({
+      title: parsed.data.title,
+      department: parsed.data.department,
+      description: parsed.data.description ?? null,
+      requiredSkills: parsed.data.requiredSkills ?? [],
+      niceToHaveSkills: parsed.data.niceToHaveSkills ?? [],
+      keywords: parsed.data.keywords ?? [],
+      experienceMin: parsed.data.experienceMin ?? null,
+      experienceMax: parsed.data.experienceMax ?? null,
+      education: parsed.data.education ?? null,
+      location: parsed.data.location ?? null,
+      salaryMin: parsed.data.salaryMin ?? null,
+      salaryMax: parsed.data.salaryMax ?? null,
+      status: "open",
+    }).returning();
 
-  await db.insert(activityTable).values({
-    type: "job_created",
-    description: `New job posted: ${job.title} in ${job.department}`,
-    jobTitle: job.title,
-  });
+    await db.insert(activityTable).values({
+      type: "job_created",
+      description: `New job posted: ${job.title} in ${job.department}`,
+      jobTitle: job.title,
+    });
 
-  res.status(201).json({ ...job, candidateCount: 0, shortlistedCount: 0 });
+    res.status(201).json({ ...job, candidateCount: 0, shortlistedCount: 0 });
+  } catch (error) {
+    logger.error({ error }, "Failed to create job");
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Failed to create job",
+    });
+  }
 });
 
 router.get("/jobs/:id", async (req, res): Promise<void> => {
