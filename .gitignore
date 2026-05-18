@@ -49,6 +49,9 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# 🔥 Sensitive tokens (IMPORTANT)
+artifacts/api-server/.google-token.json
+
 # Replit
 .cache/
 .local/
